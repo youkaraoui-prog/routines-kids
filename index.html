@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Routines Noé & Ilyan</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  body { font-family: 'Fredoka One', cursive; overflow-x: hidden; background: #FFF9C4; }
+
+  .tcard { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease; cursor: pointer; user-select: none; }
+  .tcard:active { transform: scale(0.85) !important; }
+
+  .emoji-idle { animation: wobble 2.8s ease-in-out infinite; display: inline-block; transform-origin: center bottom; }
+  .emoji-done-check { animation: pulseCheck 1.4s ease-in-out infinite; display: inline-block; }
+
+  @keyframes wobble {
+    0%,100%{ transform: rotate(0deg) scale(1); }
+    20%{ transform: rotate(-10deg) scale(1.1); }
+    40%{ transform: rotate(10deg) scale(1.1); }
+    60%{ transform: rotate(-6deg) scale(1.05); }
+    80%{ transform: rotate(6deg) scale(1.05); }
+  }
+  @keyframes pulseCheck {
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.18); }
+  }
+  @keyframes floatBounce {
+    0%,100%{ transform: translateY(0) rotate(0deg); }
+    30%{ transform: translateY(-28px) rotate(-8deg); }
+    60%{ transform: translateY(-20px) rotate(8deg); }
+  }
+  @keyframes popIn {
+    0%{ opacity:0; transform:scale(0.3) rotate(-15deg); }
+    60%{ opacity:1; transform:scale(1.12) rotate(4deg); }
+    100%{ opacity:1; transform:scale(1) rotate(0deg); }
+  }
+  @keyframes shimmer {
+    0%{ background-position: -200% center; }
+    100%{ background-position: 200% center; }
+  }
+  @keyframes fall {
+    0%{ opacity:1; transform: translateY(-20px) rotate(0deg); }
+    100%{ opacity:0; transform: translateY(110vh) rotate(720deg); }
+  }
+
+  .bounce-emoji { animation: floatBounce 1s ease infinite; display: inline-block; }
+  .pop-box { animation: popIn 0.55s cubic-bezier(0.34,1.56,0.64,1); }
+  .profile-pill { transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; }
+  .tab-btn { transition: all 0.22s ease; cursor: pointer; border: none; outline: none; }
+  .tab-btn:active { transform: scale(0.88); }
+  .confetti-piece { position: fixed; animation: fall linear forwards; border-radius: 50%; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const ELEVEN_API_KEY = "sk_c443c75ac1d31119253ec8cbe9a7a43f0c6cbb56a0307013";
+const ELEVEN_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah — douce, féminine
+
+const PROFILES = [
+  { id: "noe",   name: "Noé",   avatar: "🐻", color: "#42A5F5", bg: "#E3F2FD", accent: "#1565C0" },
+  { id: "ilyan", name: "Ilyan", avatar: "🦁", color: "#FF8A65", bg: "#FBE9E7", accent: "#BF360C" },
+];
+
+const TASKS = {
+  matin_semaine: [
+    { id: "pipi",    label: "Faire pipi",        emoji: "🚽" },
+    { id: "visage",  label: "Laver le visage",    emoji: "🫧" },
+    { id: "dents",   label: "Brosser les dents",  emoji: "🪥" },
+    { id: "habits",  label: "Mettre les habits",  emoji: "👕" },
+    { id: "lit",     label: "Ranger le lit",      emoji: "🛏️" },
+    { id: "manteau", label: "Manteau et bottes",  emoji: "🧤" },
+  ],
+  matin_weekend: [
+    { id: "pipi",      label: "Faire pipi",             emoji: "🚽" },
+    { id: "visage",    label: "Laver le visage",         emoji: "🫧" },
+    { id: "dents",     label: "Brosser les dents",       emoji: "🪥" },
+    { id: "lit",       label: "Ranger le lit",           emoji: "🛏️" },
+    { id: "parents",   label: "Pas réveiller papa & maman", emoji: "🤫" },
+    { id: "dejeuner",  label: "Petit déjeuner",          emoji: "🥣" },
+    { id: "assiettes", label: "Ranger les assiettes",    emoji: "🍽️" },
+  ],
+  retour: [
+    { id: "bottes", label: "Enlever les bottes",     emoji: "🥾" },
+    { id: "pipi",   label: "Faire pipi",             emoji: "🚽" },
+    { id: "mains",  label: "Laver les mains",        emoji: "💦" },
+    { id: "jeux",   label: "Jeux et rangements",     emoji: "🧸" },
+    { id: "diner",  label: "Dîner + laver les mains",emoji: "🍝" },
+  ],
+  dodo: [
+    { id: "pyjama",    label: "Mettre le pyjama",   emoji: "🩳" },
+    { id: "dents",     label: "Brosser les dents",  emoji: "🪥" },
+    { id: "histoires", label: "Histoires et dodo",  emoji: "📚" },
+  ],
+};
+
+const audioCache = {};
+let currentAudio = null;
+
+async function speak(text) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (audioCache[text]) {
+    currentAudio = new Audio(audioCache[text]);
+    currentAudio.play().catch(()=>{});
+    return;
+  }
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": ELEVEN_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: { stability: 0.55, similarity_boost: 0.85, style: 0.2, use_speaker_boost: true },
+      }),
+    });
+    if (!res.ok) throw new Error("API error");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    audioCache[text] = url;
+    currentAudio = new Audio(url);
+    currentAudio.play().catch(()=>{});
+  } catch {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "fr-FR"; u.rate = 0.85; u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function getTodayKey()  { return new Date().toISOString().split("T")[0]; }
+function getMonthKey()  { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()}`; }
+function isWeekend()    { const d = new Date().getDay(); return d === 0 || d === 6; }
+function getDayName()   { return ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"][new Date().getDay()]; }
+
+const STORAGE_KEY_DONE    = "kd_done_v2";
+const STORAGE_KEY_PTS     = "kd_pts_v2";
+const STORAGE_KEY_AWARDED = "kd_awarded_v2";
+const TARGET = 200;
+
+const CONFETTI_COLORS = ["#FF6B6B","#FFE66D","#4ECDC4","#45B7D1","#96CEB4","#FF8B94","#A8E6CF","#FFD700"];
+
+function Confetti() {
+  const pieces = Array.from({length: 40}).map((_, i) => ({
+    id: i,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    left: `${Math.random()*100}%`,
+    size: 8 + Math.random()*12,
+    delay: Math.random()*0.8,
+    dur: 1.2 + Math.random()*1,
+    round: Math.random() > 0.5,
+  }));
+  return (
+    <>
+      {pieces.map(p => (
+        <div key={p.id} className="confetti-piece" style={{
+          background: p.color, left: p.left, top: -20,
+          width: p.size, height: p.size,
+          borderRadius: p.round ? "50%" : 3,
+          animationDelay: `${p.delay}s`,
+          animationDuration: `${p.dur}s`,
+        }}/>
+      ))}
+    </>
+  );
+}
+
+export default function App() {
+  const [profile, setProfile]       = useState("noe");
+  const [tab, setTab]               = useState("matin");
+  const [done, setDone]             = useState({});
+  const [pts, setPts]               = useState({});
+  const [awarded, setAwarded]       = useState({});
+  const [celebration, setCelebration] = useState(false);
+  const [loaded, setLoaded]         = useState(false);
+
+  const todayKey = getTodayKey();
+  const monthKey = getMonthKey();
+  const weekend  = isWeekend();
+  const matinKey = weekend ? "matin_weekend" : "matin_semaine";
+
+  const tabs = [
+    { key: "matin",  label: "Matin",  emoji: "☀️", taskKey: matinKey },
+    { key: "retour", label: "Retour", emoji: "🏠", taskKey: "retour" },
+    { key: "dodo",   label: "Dodo",   emoji: "🩳", taskKey: "dodo" },
+  ];
+
+  const currentTab = tabs.find(t => t.key === tab);
+  const tasks = TASKS[currentTab.taskKey];
+  const prof  = PROFILES.find(p => p.id === profile);
+
+  useEffect(() => {
+    try { const s = localStorage.getItem(STORAGE_KEY_DONE);    if (s) setDone(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(STORAGE_KEY_PTS);     if (s) setPts(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(STORAGE_KEY_AWARDED); if (s) setAwarded(JSON.parse(s)); } catch {}
+    setLoaded(true);
+  }, []);
+
+  function doneKey(taskId, tabKey) { return `${profile}_${todayKey}_${tabKey}_${taskId}`; }
+  function isDone(taskId, tabKey)  { return !!done[doneKey(taskId, tabKey)]; }
+  function isTabComplete(t)        { return TASKS[t.taskKey].every(task => !!done[`${profile}_${todayKey}_${t.key}_${task.id}`]); }
+
+  function isAllComplete(newDone) {
+    return tabs.every(t => TASKS[t.taskKey].every(task => !!newDone[`${profile}_${todayKey}_${t.key}_${task.id}`]));
+  }
+
+  function getMonthPts(pid) { return pts[`${pid}_${monthKey}`] || 0; }
+
+  async function toggleTask(task) {
+    const key    = doneKey(task.id, tab);
+    const newVal = !done[key];
+    const newDone = { ...done, [key]: newVal };
+    setDone(newDone);
+    try { localStorage.setItem(STORAGE_KEY_DONE, JSON.stringify(newDone)); } catch {}
+
+    if (newVal) {
+      speak(task.label);
+      const aKey = `${profile}_${todayKey}`;
+      if (isAllComplete(newDone) && !awarded[aKey]) {
+        const newAwarded = { ...awarded, [aKey]: true };
+        setAwarded(newAwarded);
+        try { localStorage.setItem(STORAGE_KEY_AWARDED, JSON.stringify(newAwarded)); } catch {}
+        const pKey  = `${profile}_${monthKey}`;
+        const newPts = { ...pts, [pKey]: (pts[pKey] || 0) + 10 };
+        setPts(newPts);
+        try { localStorage.setItem(STORAGE_KEY_PTS, JSON.stringify(newPts)); } catch {}
+        setCelebration(true);
+        setTimeout(() => speak(`Bravo ${prof.name} ! Tu as gagné dix points !`), 600);
+        setTimeout(() => setCelebration(false), 5000);
+      }
+    }
+  }
+
+  const monthPts = getMonthPts(profile);
+  const pct      = Math.min((monthPts / TARGET) * 100, 100);
+
+  if (!loaded) return (
+    <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", fontSize:90 }}>⏳</div>
+  );
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: `linear-gradient(160deg, ${prof.bg} 0%, #FFFDE7 60%, #fff 100%)`,
+      paddingBottom: 56,
+      transition: "background 0.6s ease",
+    }}>
+
+      {/* 🎉 Celebration */}
+      {celebration && (
+        <div onClick={() => setCelebration(false)} style={{
+          position:"fixed", inset:0, zIndex:999,
+          background:"rgba(0,0,0,0.68)",
+          display:"flex", flexDirection:"column",
+          alignItems:"center", justifyContent:"center", gap:28,
+          backdropFilter:"blur(5px)",
+        }}>
+          <Confetti/>
+          <div className="bounce-emoji" style={{ fontSize:110 }}>🎉</div>
+          <div className="pop-box" style={{
+            background:"white", borderRadius:36, padding:"34px 56px",
+            textAlign:"center", boxShadow:"0 28px 72px rgba(0,0,0,0.38)",
+          }}>
+            <div style={{ fontSize:72 }}>{prof.avatar}</div>
+            <div style={{ fontSize:38, color:prof.accent, marginTop:10 }}>Bravo {prof.name} !</div>
+            <div style={{ fontSize:26, color:"#FFA000", marginTop:10 }}>+10 points ⭐</div>
+            <div style={{ fontSize:18, color:"#888", marginTop:8, fontFamily:"'Nunito',sans-serif", fontWeight:700 }}>
+              Toutes les routines terminées ! 🥳
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── HEADER ─── */}
+      <div style={{
+        background: prof.color,
+        padding: "30px 20px 34px",
+        borderRadius: "0 0 44px 44px",
+        boxShadow: "0 10px 32px rgba(0,0,0,0.22)",
+      }}>
+        {/* Profils */}
+        <div style={{ display:"flex", justifyContent:"center", gap:20, marginBottom:24 }}>
+          {PROFILES.map(p => {
+            const active = p.id === profile;
+            return (
+              <div key={p.id} className="profile-pill"
+                onClick={() => { setProfile(p.id); speak(p.name); }}
+                style={{
+                  background: active ? "white" : "rgba(255,255,255,0.22)",
+                  borderRadius: 30, padding:"18px 34px",
+                  display:"flex", flexDirection:"column", alignItems:"center", gap:6,
+                  border: active ? "4px solid white" : "4px solid transparent",
+                  transform: active ? "scale(1.09)" : "scale(0.97)",
+                  boxShadow: active ? "0 10px 28px rgba(0,0,0,0.25)" : "none",
+                }}>
+                <span style={{ fontSize:60 }}>{p.avatar}</span>
+                <span style={{ fontSize:23, color: active ? p.accent : "white" }}>{p.name}</span>
+                <span style={{ fontSize:18, color: active ? "#FFA000" : "rgba(255,255,255,0.85)" }}>
+                  ⭐ {getMonthPts(p.id)} pts
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Barre de progression */}
+        <div style={{ padding:"0 8px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+            <span style={{ color:"white", fontSize:17 }}>🗓️ Ce mois-ci</span>
+            <span style={{ color:"white", fontSize:17 }}>{monthPts} / {TARGET} pts 🏆</span>
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.28)", borderRadius:20, height:22, overflow:"hidden" }}>
+            <div style={{
+              width:`${pct}%`, height:"100%",
+              background:"linear-gradient(90deg, white, rgba(255,255,255,0.75))",
+              borderRadius:20, transition:"width 0.8s ease",
+              boxShadow:"0 2px 10px rgba(255,255,255,0.6)",
+            }}/>
+          </div>
+        </div>
+
+        <div style={{ textAlign:"center", marginTop:12 }}>
+          <span style={{ color:"rgba(255,255,255,0.88)", fontSize:16 }}>
+            {getDayName()}{weekend ? " 🎉 Week-end !" : ""}
+          </span>
+        </div>
+      </div>
+
+      {/* ─── ONGLETS ─── */}
+      <div style={{ display:"flex", gap:14, padding:"24px 20px 10px" }}>
+        {tabs.map(t => {
+          const complete = isTabComplete(t);
+          const active   = t.key === tab;
+          return (
+            <button key={t.key} className="tab-btn"
+              onClick={() => { setTab(t.key); speak(t.label); }}
+              style={{
+                flex:1, borderRadius:24, padding:"18px 8px",
+                background: active ? prof.color : "rgba(255,255,255,0.88)",
+                boxShadow: active ? "0 6px 20px rgba(0,0,0,0.22)" : "0 2px 8px rgba(0,0,0,0.08)",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:6,
+              }}>
+              <span style={{ fontSize:36 }}>{complete ? "✅" : t.emoji}</span>
+              <span style={{ fontSize:14, color: active ? "white" : "#555", fontFamily:"'Fredoka One',cursive" }}>
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ─── GRILLE TÂCHES ─── */}
+      <div style={{
+        display:"grid", gridTemplateColumns:"1fr 1fr",
+        gap:16, padding:"12px 20px",
+      }}>
+        {tasks.map(task => {
+          const d = isDone(task.id, tab);
+          return (
+            <div key={task.id} className="tcard"
+              onClick={() => toggleTask(task)}
+              style={{
+                background: d
+                  ? "linear-gradient(135deg, #69F0AE 0%, #00C853 100%)"
+                  : "white",
+                borderRadius:32, padding:"24px 14px",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:14,
+                boxShadow: d ? "0 10px 30px rgba(0,200,83,0.4)" : "0 4px 18px rgba(0,0,0,0.1)",
+                border: d ? "3px solid #00C853" : "3px solid rgba(0,0,0,0.04)",
+                minHeight:200, justifyContent:"center",
+                transform: d ? "scale(1.03)" : "scale(1)",
+                transition:"transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease",
+              }}>
+              <span className={d ? "emoji-done-check" : "emoji-idle"} style={{
+                fontSize:90,
+                filter: d
+                  ? "drop-shadow(0 6px 14px rgba(0,180,60,0.4))"
+                  : "drop-shadow(0 4px 10px rgba(0,0,0,0.12))",
+              }}>
+                {d ? "⭐" : task.emoji}
+              </span>
+              <span style={{
+                fontSize:18, color: d ? "#1B5E20" : "#333",
+                textAlign:"center", lineHeight:1.3,
+                fontFamily:"'Fredoka One',cursive",
+              }}>
+                {task.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ─── RÉCOMPENSE MENSUELLE ─── */}
+      {monthPts >= TARGET && (
+        <div style={{
+          margin:"20px 20px 0",
+          background:"linear-gradient(135deg, #FFD700 0%, #FF8F00 100%)",
+          borderRadius:32, padding:32, textAlign:"center",
+          boxShadow:"0 12px 36px rgba(255,160,0,0.5)",
+        }}>
+          <div style={{ fontSize:80 }}>🏆</div>
+          <div style={{ fontSize:30, color:"white", marginTop:10 }}>Félicitations {prof.name} !</div>
+          <div style={{ fontSize:20, color:"white", marginTop:8, fontFamily:"'Nunito',sans-serif", fontWeight:700 }}>
+            Tu as gagné ta récompense du mois ! 🎉
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
