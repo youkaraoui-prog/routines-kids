@@ -103,34 +103,48 @@ const TASKS = {
 };
 
 const audioCache = {};
-let currentAudio = null;
+let audioUnlocked = false;
+
+// Déverrouille l audio iOS au premier tap
+function unlockAudio() {
+  if (audioUnlocked) return;
+  const silence = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+  silence.play().then(() => { audioUnlocked = true; }).catch(()=>{});
+  document.removeEventListener("touchstart", unlockAudio);
+  document.removeEventListener("click", unlockAudio);
+}
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
 
 async function speak(text) {
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  if (audioCache[text]) {
-    currentAudio = new Audio(audioCache[text]);
-    currentAudio.play().catch(()=>{});
-    return;
-  }
   try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
-      method: "POST",
-      headers: {
-        "xi-api-key": ELEVEN_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text,
-        model_id: "eleven_multilingual_v2",
-        voice_settings: { stability: 0.55, similarity_boost: 0.85, style: 0.2, use_speaker_boost: true },
-      }),
+    // Utilise le cache si dispo
+    let url = audioCache[text];
+    if (!url) {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE_ID}`, {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVEN_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: { stability: 0.55, similarity_boost: 0.85, style: 0.2, use_speaker_boost: true },
+        }),
+      });
+      if (!res.ok) throw new Error("API error");
+      const blob = await res.blob();
+      url = URL.createObjectURL(blob);
+      audioCache[text] = url;
+    }
+    const audio = new Audio(url);
+    audio.play().catch(() => {
+      // Fallback navigateur
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "fr-FR"; u.rate = 0.85; u.pitch = 1.1;
+      window.speechSynthesis.speak(u);
     });
-    if (!res.ok) throw new Error("API error");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    audioCache[text] = url;
-    currentAudio = new Audio(url);
-    currentAudio.play().catch(()=>{});
   } catch {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "fr-FR"; u.rate = 0.85; u.pitch = 1.1;
