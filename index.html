@@ -435,10 +435,10 @@ function HomeScreen({profiles,activeId,done,pts,onSwitchProfile,onTabSelect,onVi
 }
 
 // 3. Routine Screen
-function RoutineScreen({profile,tab,done,onToggle,onBack}){
+function RoutineScreen({profile,tab,done,customTasks,onToggle,onBack}){
   const hero=getHero(profile.heroId);
   const tlKey=getTaskList(tab);
-  const tasks=TASKS[tlKey];
+  const tasks=(customTasks&&customTasks[tlKey])||TASKS[tlKey];
   const meta=TAB_META[tab];
   const completed=tasks.filter(t=>done[doneKey(profile.id,tab,t.id)]).length;
   const allDone=completed===tasks.length;
@@ -656,6 +656,7 @@ function BottomNav({screen,onNav}){
     {key:'retour',label:'Retour', emoji:'🏠'},
     {key:'dodo',  label:'Dodo',   emoji:'🌙'},
     {key:'bocal', label:'Étoiles',emoji:'⭐'},
+    {key:'parent',label:'Parents',emoji:'🔐'},
   ];
   return(
     <div className="bnav">
@@ -695,13 +696,17 @@ function App(){
   const [celebrate, setCelebrate] = useState(false);
   const [heroFor,   setHeroFor]   = useState(null);
   const [loaded,    setLoaded]    = useState(false);
+  const [customTasks,   setCustomTasks]   = useState({});
+  const [scheduleHours, setScheduleHours] = useState({matin:[6,12],retour:[12,19],dodo:[19,23]});
 
   // Load from localStorage
   useEffect(()=>{
     try{const s=localStorage.getItem('rk_done_v3'); if(s) setDone(JSON.parse(s));}catch{}
     try{const s=localStorage.getItem('rk_pts_v3');  if(s) setPts(JSON.parse(s)); }catch{}
     try{const s=localStorage.getItem('rk_awd_v3');  if(s) setAwarded(JSON.parse(s));}catch{}
-    try{const s=localStorage.getItem('rk_prof_v3'); if(s) setProfiles(JSON.parse(s));}catch{}
+    try{const s=localStorage.getItem('rk_prof_v3');   if(s) setProfiles(JSON.parse(s));}catch{}
+    try{const s=localStorage.getItem('rk_ctasks_v3'); if(s) setCustomTasks(JSON.parse(s));}catch{}
+    try{const s=localStorage.getItem('rk_sched_v3');  if(s) setScheduleHours(JSON.parse(s));}catch{}
     // Also load from Firebase
     loadFromFirebase();
     setLoaded(true);
@@ -732,6 +737,35 @@ function App(){
       {key:'dodo',  tkKey:'dodo'},
     ];
     return tabs.every(t=>TASKS[t.tkKey].every(task=>!!newDone[doneKey(pid,t.key,task.id)]));
+  }
+
+  function handleResetPts(pid,type){
+    if(type==='day'){
+      const newDone={...done};
+      const t2=todayKey();
+      Object.keys(newDone).forEach(k=>{ if(k.startsWith(pid+'_'+t2)) delete newDone[k]; });
+      const newAwarded={...awarded};
+      delete newAwarded[pid+'_'+t2];
+      setDone(newDone); setAwarded(newAwarded);
+      saveAll(newDone,pts,newAwarded);
+    } else {
+      const newPts={...pts};
+      delete newPts[pid+'_'+monthKey()];
+      setPts(newPts);
+      saveAll(done,newPts,awarded);
+    }
+  }
+
+  function handleSaveCustomTasks(ct){
+    setCustomTasks(ct);
+    try{localStorage.setItem('rk_ctasks_v3',JSON.stringify(ct));}catch{}
+    fbSave('app','state',{done,pts,awarded,profiles,customTasks:ct,scheduleHours});
+  }
+
+  function handleSaveSchedule(sh){
+    setScheduleHours(sh);
+    try{localStorage.setItem('rk_sched_v3',JSON.stringify(sh));}catch{}
+    fbSave('app','state',{done,pts,awarded,profiles,customTasks,scheduleHours:sh});
   }
 
   async function handleToggle(task,tab){
@@ -798,6 +832,7 @@ function App(){
           profile={profile}
           tab={screen}
           done={done}
+          customTasks={customTasks}
           onToggle={handleToggle}
           onBack={()=>setScreen('home')}
         />
@@ -807,9 +842,416 @@ function App(){
         <BocalScreen profile={profile} pts={pts} onBack={()=>setScreen('home')}/>
       )}
 
-      <BottomNav screen={screen} onNav={s=>{
-        if(['home','matin','retour','dodo','bocal'].includes(s)) setScreen(s);
-      }}/>
+      {screen==='parent'&&(
+        <ParentDashboard
+          profiles={profiles}
+          pts={pts}
+          done={done}
+          awarded={awarded}
+          customTasks={customTasks}
+          scheduleHours={scheduleHours}
+          onResetPts={handleResetPts}
+          onSaveCustomTasks={handleSaveCustomTasks}
+          onSaveSchedule={handleSaveSchedule}
+          onBack={()=>setScreen('home')}
+        />
+      )}
+
+      {screen!=='parent'&&(
+        <BottomNav screen={screen} onNav={s=>{
+          if(s==='parent') setScreen('parent');
+          else if(['home','matin','retour','dodo','bocal'].includes(s)) setScreen(s);
+        }}/>
+      )}
+    </div>
+  );
+}
+
+/* ── PARENT DASHBOARD ────────────────────────────── */
+const PARENT_PWD = '1234';
+const EMOJI_PICKER = ['🚽','🫧','🪥','👕','🛏️','🧤','🥾','💦','🧸','🍝','🩳','📚','🥣','🍽️','🤫','🧼','🎒','🏃','🦷','🍎','🥛','📖','🎨','🎮','🧩','🌟','🎵','🏠','🌙','☀️'];
+
+function ParentDashboard({profiles,pts,done,awarded,customTasks,scheduleHours,onResetPts,onSaveCustomTasks,onSaveSchedule,onBack}){
+  const [authed,  setAuthed]  = useState(false);
+  const [pwd,     setPwd]     = useState('');
+  const [pwdErr,  setPwdErr]  = useState(false);
+  const [tab,     setTab]     = useState('tasks');
+  const [editTab, setEditTab] = useState('matin_semaine');
+  const [tasks,   setTasks]   = useState(()=>JSON.parse(JSON.stringify(customTasks||{})));
+  const [hours,   setHours]   = useState(()=>({...{matin:[6,12],retour:[12,19],dodo:[19,23]},...(scheduleHours||{})}));
+  const [newTask, setNewTask]  = useState({label:'',emoji:'🌟'});
+  const [emojiPick,setEmojiPick]=useState(false);
+  const [saved,   setSaved]   = useState(false);
+
+  const month=monthKey();
+  const today=todayKey();
+
+  // History: count days with all complete per profile per week
+  function getHistory(pid){
+    const days=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const dk=d.toISOString().split('T')[0];
+      const dayName=['D','L','M','M','J','V','S'][d.getDay()];
+      const aKey=`${pid}_${dk}`;
+      days.push({label:dayName,done:!!awarded[aKey],date:dk});
+    }
+    return days;
+  }
+
+  function handleLogin(){
+    if(pwd===PARENT_PWD){ setAuthed(true); setPwdErr(false); }
+    else{ setPwdErr(true); setPwd(''); }
+  }
+
+  function addTask(){
+    if(!newTask.label.trim()) return;
+    const key=editTab;
+    const curr=tasks[key]||[...TASKS[key]];
+    const id='custom_'+Date.now();
+    setTasks({...tasks,[key]:[...curr,{id,label:newTask.label,emoji:newTask.emoji,desc:'Super !',custom:true}]});
+    setNewTask({label:'',emoji:'🌟'});
+  }
+
+  function removeTask(tabKey,taskId){
+    const curr=tasks[tabKey]||[...TASKS[tabKey]];
+    setTasks({...tasks,[tabKey]:curr.filter(t=>t.id!==taskId)});
+  }
+
+  function changeEmoji(tabKey,taskId,emoji){
+    const curr=tasks[tabKey]||[...TASKS[tabKey]];
+    setTasks({...tasks,[tabKey]:curr.map(t=>t.id===taskId?{...t,emoji}:t)});
+  }
+
+  function handleSave(){
+    onSaveCustomTasks(tasks);
+    onSaveSchedule(hours);
+    setSaved(true);
+    setTimeout(()=>setSaved(false),2000);
+  }
+
+  const tabKeys=['matin_semaine','matin_weekend','retour','dodo'];
+  const tabLabels={'matin_semaine':'☀️ Matin semaine','matin_weekend':'🎉 Matin WE','retour':'🏠 Retour','dodo':'🌙 Dodo'};
+
+  if(!authed) return(
+    <div style={{minHeight:'100vh',background:'var(--surf-low)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32}}>
+      <button onClick={onBack} style={{position:'absolute',top:52,left:20,background:'var(--white)',border:'none',borderRadius:'50%',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:20,boxShadow:'0 4px 12px rgba(0,0,0,.1)'}}>←</button>
+      <div style={{fontSize:64,marginBottom:16}}>🔐</div>
+      <h1 style={{fontSize:26,fontWeight:800,marginBottom:8,textAlign:'center'}}>Espace Parents</h1>
+      <p style={{color:'var(--on-var)',marginBottom:32,textAlign:'center'}}>Mode sécurisé — entrez votre code</p>
+      <div className="card" style={{padding:32,width:'100%',maxWidth:340}}>
+        <div style={{display:'flex',gap:12,justifyContent:'center',marginBottom:24}}>
+          {[0,1,2,3].map(i=>(
+            <div key={i} style={{width:22,height:22,borderRadius:'50%',background:pwd.length>i?'var(--primary)':'var(--surf-mid)',transition:'background .2s'}}/>
+          ))}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
+          {[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map((n,i)=>(
+            <button key={i} onClick={()=>{
+              if(n==='⌫') setPwd(p=>p.slice(0,-1));
+              else if(n!==''&&pwd.length<4) setPwd(p=>p+n);
+            }} style={{
+              padding:'18px 0',borderRadius:'var(--radius-md)',
+              background:n===''?'transparent':'var(--white)',
+              border:'none',cursor:n===''?'default':'pointer',
+              fontFamily:"'Plus Jakarta Sans',sans-serif",
+              fontWeight:700,fontSize:22,
+              boxShadow:n===''?'none':'0 2px 8px rgba(0,0,0,.08)',
+              transition:'transform .15s',
+            }}>{n}</button>
+          ))}
+        </div>
+        {pwdErr&&<p style={{color:'#ba1a1a',textAlign:'center',marginBottom:12,fontSize:14}}>Code incorrect !</p>}
+        <button className="btn-gold" style={{width:'100%',padding:'16px',fontSize:17}} onClick={handleLogin}>
+          Accéder 🔓
+        </button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{minHeight:'100vh',background:'var(--surf-low)',paddingBottom:40}} className="noscroll">
+      {/* Header */}
+      <div style={{background:'linear-gradient(135deg,var(--primary),var(--pd))',padding:'52px 20px 24px',color:'white'}}>
+        <button onClick={onBack} style={{background:'rgba(255,255,255,.2)',border:'none',borderRadius:'50%',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:20,color:'white',marginBottom:16}}>←</button>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+          <div>
+            <h1 style={{fontSize:28,fontWeight:800}}>Espace Parents 🔐</h1>
+            <p style={{opacity:.85,marginTop:4}}>Gérez les routines et suivez les progrès</p>
+          </div>
+          <div style={{background:'rgba(255,255,255,.2)',borderRadius:'var(--radius-md)',padding:'10px 16px',textAlign:'center'}}>
+            <div style={{fontSize:11,opacity:.8,marginBottom:4}}>AUJOURD'HUI</div>
+            <div style={{fontWeight:800,fontSize:16}}>
+              {profiles.map(p=>{ const aKey=`${p.id}_${today}`; return awarded[aKey]?'✅':' '; }).join(' ')}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{display:'flex',gap:10,marginTop:20}}>
+          {[{k:'tasks',l:'📋 Tâches'},{k:'rapports',l:'📊 Rapports'},{k:'horaires',l:'🕐 Horaires'},{k:'reset',l:'🔄 Reset'}].map(t=>(
+            <button key={t.k} onClick={()=>setTab(t.k)} style={{
+              background:tab===t.k?'white':'rgba(255,255,255,.2)',
+              color:tab===t.k?'var(--primary)':'white',
+              border:'none',borderRadius:'var(--radius-full)',
+              padding:'8px 14px',fontFamily:"'Plus Jakarta Sans',sans-serif",
+              fontWeight:700,fontSize:12,cursor:'pointer',
+              whiteSpace:'nowrap',
+            }}>{t.l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{padding:'20px 20px 0'}}>
+
+        {/* ── TÂCHES ── */}
+        {tab==='tasks'&&(
+          <div>
+            {/* Routine selector */}
+            <div style={{display:'flex',gap:8,marginBottom:20,overflowX:'auto',paddingBottom:4}} className="noscroll">
+              {tabKeys.map(k=>(
+                <button key={k} onClick={()=>setEditTab(k)} style={{
+                  background:editTab===k?'var(--primary)':'var(--white)',
+                  color:editTab===k?'white':'var(--on-surf)',
+                  border:'none',borderRadius:'var(--radius-full)',
+                  padding:'10px 16px',fontFamily:"'Plus Jakarta Sans',sans-serif",
+                  fontWeight:700,fontSize:12,cursor:'pointer',whiteSpace:'nowrap',
+                  boxShadow:'0 2px 8px rgba(0,0,0,.08)',
+                }}>{tabLabels[k]}</button>
+              ))}
+            </div>
+
+            {/* Task list */}
+            <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:20}}>
+              {(tasks[editTab]||TASKS[editTab]).map(task=>(
+                <div key={task.id} className="card" style={{padding:'14px 16px',display:'flex',alignItems:'center',gap:12}}>
+                  {/* Emoji button */}
+                  <div style={{position:'relative'}}>
+                    <button onClick={()=>setEmojiPick(emojiPick===task.id?false:task.id)} style={{
+                      width:48,height:48,borderRadius:'1rem',
+                      background:'var(--pf)',border:'none',cursor:'pointer',fontSize:26,
+                    }}>{task.emoji}</button>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:15}}>{task.label}</div>
+                    {task.custom&&<span style={{fontSize:10,background:'var(--sec-cnt)',color:'var(--secondary)',borderRadius:20,padding:'2px 8px'}}>Personnalisé</span>}
+                  </div>
+                  <button onClick={()=>removeTask(editTab,task.id)} style={{
+                    background:'#ffdad6',color:'#ba1a1a',border:'none',
+                    borderRadius:'50%',width:36,height:36,cursor:'pointer',
+                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,
+                  }}>✕</button>
+                  {/* Emoji picker */}
+                  {emojiPick===task.id&&(
+                    <div style={{
+                      position:'absolute',left:20,right:20,
+                      background:'var(--white)',borderRadius:'var(--radius-lg)',
+                      padding:16,boxShadow:'0 16px 48px rgba(0,0,0,.2)',
+                      zIndex:500,display:'flex',flexWrap:'wrap',gap:8,
+                    }}>
+                      {EMOJI_PICKER.map(e=>(
+                        <button key={e} onClick={()=>{changeEmoji(editTab,task.id,e);setEmojiPick(false);}} style={{
+                          fontSize:28,background:'none',border:'none',cursor:'pointer',
+                          padding:'4px',borderRadius:8,
+                        }}>{e}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Add task */}
+            <div className="card" style={{padding:'16px'}}>
+              <h3 style={{fontSize:15,fontWeight:800,marginBottom:12}}>➕ Ajouter une tâche</h3>
+              <div style={{display:'flex',gap:10,marginBottom:12}}>
+                <button onClick={()=>setEmojiPick('new')} style={{
+                  width:52,height:52,borderRadius:'1rem',background:'var(--pf)',
+                  border:'none',cursor:'pointer',fontSize:28,flexShrink:0,
+                }}>{newTask.emoji}</button>
+                {emojiPick==='new'&&(
+                  <div style={{
+                    position:'absolute',left:20,right:20,
+                    background:'var(--white)',borderRadius:'var(--radius-lg)',
+                    padding:16,boxShadow:'0 16px 48px rgba(0,0,0,.2)',
+                    zIndex:500,display:'flex',flexWrap:'wrap',gap:8,
+                  }}>
+                    {EMOJI_PICKER.map(e=>(
+                      <button key={e} onClick={()=>{setNewTask(t=>({...t,emoji:e}));setEmojiPick(false);}} style={{
+                        fontSize:28,background:'none',border:'none',cursor:'pointer',padding:'4px',borderRadius:8,
+                      }}>{e}</button>
+                    ))}
+                  </div>
+                )}
+                <input value={newTask.label} onChange={e=>setNewTask(t=>({...t,label:e.target.value}))}
+                  placeholder="Nom de la tâche..."
+                  style={{
+                    flex:1,padding:'12px 16px',borderRadius:'var(--radius-md)',
+                    border:'2px solid var(--surf-top)',background:'var(--surf-low)',
+                    fontFamily:"'Be Vietnam Pro',sans-serif",fontSize:15,outline:'none',
+                  }}/>
+              </div>
+              <button className="btn-gold" style={{width:'100%',padding:'14px',fontSize:15}} onClick={addTask}>
+                Ajouter ✨
+              </button>
+            </div>
+
+            <button className="btn-gold" style={{width:'100%',padding:'16px',fontSize:16,marginTop:20}} onClick={handleSave}>
+              {saved?'✅ Sauvegardé !':'💾 Sauvegarder les changements'}
+            </button>
+          </div>
+        )}
+
+        {/* ── RAPPORTS ── */}
+        {tab==='rapports'&&(
+          <div>
+            {profiles.map(p=>{
+              const hero=getHero(p.heroId);
+              const monthPts=pts[`${p.id}_${month}`]||0;
+              const history=getHistory(p.id);
+              const streak=history.filter(d=>d.done).length;
+              const tabs2=[
+                {key:'matin',tkKey:getTaskList('matin')},
+                {key:'retour',tkKey:'retour'},
+                {key:'dodo',tkKey:'dodo'},
+              ];
+              const todayDone=tabs2.reduce((acc,t)=>{
+                const ts=TASKS[t.tkKey];
+                return acc+ts.filter(task=>done[doneKey(p.id,t.key,task.id)]).length;
+              },0);
+              const todayTotal=tabs2.reduce((acc,t)=>acc+TASKS[t.tkKey].length,0);
+              return(
+                <div key={p.id} className="card" style={{padding:'20px',marginBottom:16}}>
+                  <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
+                    <span style={{fontSize:48}}>{hero.emoji}</span>
+                    <div style={{flex:1}}>
+                      <h3 style={{fontSize:20,fontWeight:800}}>{p.name}</h3>
+                      <p style={{color:'var(--on-var)',fontSize:13}}>⭐ {monthPts} pts ce mois</p>
+                    </div>
+                    <div style={{background:'var(--ter-cnt)',borderRadius:'var(--radius-md)',padding:'10px 16px',textAlign:'center'}}>
+                      <div style={{fontWeight:800,fontSize:22,color:'#005318'}}>{todayDone}/{todayTotal}</div>
+                      <div style={{fontSize:11,color:'#005318'}}>Aujourd'hui</div>
+                    </div>
+                  </div>
+
+                  {/* Weekly history */}
+                  <div style={{marginBottom:14}}>
+                    <p style={{fontSize:13,fontWeight:700,marginBottom:10,color:'var(--on-var)'}}>7 derniers jours :</p>
+                    <div style={{display:'flex',gap:8}}>
+                      {history.map((d,i)=>(
+                        <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                          <div style={{
+                            width:'100%',aspectRatio:'1',borderRadius:'0.75rem',
+                            background:d.done?'var(--ter-cnt)':'var(--surf-top)',
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            fontSize:18,
+                          }}>{d.done?'✅':'🔒'}</div>
+                          <span style={{fontSize:10,fontWeight:700,color:'var(--on-var)'}}>{d.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Streak */}
+                  <div style={{
+                    background:'linear-gradient(135deg,var(--pf),#fff3c4)',
+                    borderRadius:'var(--radius-md)',padding:'12px 16px',
+                    display:'flex',alignItems:'center',gap:12,
+                  }}>
+                    <span style={{fontSize:28}}>🔥</span>
+                    <div>
+                      <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,color:'var(--primary)'}}>{streak} / 7 jours</span>
+                      <p style={{fontSize:12,color:'var(--on-var)',marginTop:2}}>complétés cette semaine</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── HORAIRES ── */}
+        {tab==='horaires'&&(
+          <div>
+            <p style={{color:'var(--on-var)',marginBottom:20,fontSize:14}}>Ajustez les plages horaires pour chaque routine (heure de Mountain Time Edmonton)</p>
+            {[
+              {key:'matin', label:'☀️ Matin', emoji:'☀️'},
+              {key:'retour',label:'🏠 Retour',emoji:'🏠'},
+              {key:'dodo',  label:'🌙 Dodo',  emoji:'🌙'},
+            ].map(r=>(
+              <div key={r.key} className="card" style={{padding:'18px',marginBottom:14}}>
+                <h3 style={{fontSize:16,fontWeight:800,marginBottom:14}}>{r.label}</h3>
+                <div style={{display:'flex',gap:16,alignItems:'center'}}>
+                  <div style={{flex:1}}>
+                    <label style={{fontSize:12,fontWeight:700,color:'var(--on-var)',display:'block',marginBottom:6}}>Début</label>
+                    <select value={hours[r.key]?.[0]||0} onChange={e=>setHours(h=>({...h,[r.key]:[parseInt(e.target.value),h[r.key]?.[1]||23]}))} style={{
+                      width:'100%',padding:'10px 12px',borderRadius:'var(--radius-sm)',
+                      border:'2px solid var(--surf-top)',background:'var(--surf-low)',
+                      fontFamily:"'Be Vietnam Pro',sans-serif",fontSize:15,
+                    }}>
+                      {Array.from({length:24}).map((_,i)=>(
+                        <option key={i} value={i}>{i}h00</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span style={{fontSize:22,marginTop:20}}>→</span>
+                  <div style={{flex:1}}>
+                    <label style={{fontSize:12,fontWeight:700,color:'var(--on-var)',display:'block',marginBottom:6}}>Fin</label>
+                    <select value={hours[r.key]?.[1]||23} onChange={e=>setHours(h=>({...h,[r.key]:[h[r.key]?.[0]||0,parseInt(e.target.value)]}))} style={{
+                      width:'100%',padding:'10px 12px',borderRadius:'var(--radius-sm)',
+                      border:'2px solid var(--surf-top)',background:'var(--surf-low)',
+                      fontFamily:"'Be Vietnam Pro',sans-serif",fontSize:15,
+                    }}>
+                      {Array.from({length:24}).map((_,i)=>(
+                        <option key={i} value={i}>{i}h00</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="btn-gold" style={{width:'100%',padding:'16px',fontSize:16,marginTop:8}} onClick={handleSave}>
+              {saved?'✅ Sauvegardé !':'💾 Sauvegarder'}
+            </button>
+          </div>
+        )}
+
+        {/* ── RESET ── */}
+        {tab==='reset'&&(
+          <div>
+            <p style={{color:'var(--on-var)',marginBottom:20,fontSize:14}}>Réinitialisez les points ou les tâches du jour pour chaque enfant.</p>
+            {profiles.map(p=>{
+              const hero=getHero(p.heroId);
+              const monthPts=pts[`${p.id}_${month}`]||0;
+              return(
+                <div key={p.id} className="card" style={{padding:'20px',marginBottom:14}}>
+                  <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
+                    <span style={{fontSize:48}}>{hero.emoji}</span>
+                    <div>
+                      <h3 style={{fontSize:18,fontWeight:800}}>{p.name}</h3>
+                      <p style={{color:'var(--on-var)',fontSize:13}}>⭐ {monthPts} pts ce mois</p>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                    <button onClick={()=>onResetPts(p.id,'day')} style={{
+                      padding:'14px',borderRadius:'var(--radius-md)',
+                      background:'#fff8e1',color:'#F57F17',
+                      border:'2px solid #FFE082',cursor:'pointer',
+                      fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:14,
+                    }}>🔄 Réinitialiser les tâches du jour</button>
+                    <button onClick={()=>{if(window.confirm(`Effacer tous les points de ${p.name} ce mois ?`)) onResetPts(p.id,'month');}} style={{
+                      padding:'14px',borderRadius:'var(--radius-md)',
+                      background:'#ffdad6',color:'#ba1a1a',
+                      border:'2px solid #ffb4ab',cursor:'pointer',
+                      fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:14,
+                    }}>🗑️ Effacer les points du mois</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
