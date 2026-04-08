@@ -114,8 +114,8 @@ const TARGET=200;
 const EMOJIS=["🚽","🫧","🪥","👕","🛏️","🧤","🥾","💦","🧸","🍝","🩳","📚","🥣","🍽️","🤫","🎒","🌟","🎨","🎵","🏃","🍎","📖","🧩","🎮","🌈","🏠","⭐","🎯","🚀","🌺"];
 
 const CI={
-  "Zebre":"🦓","Chameau":"🐪","Lama":"🦙","Hippopotame":"🦛","Rhinoceros":"🦏",
-  "Loup":"🐺","Chacal":"🦊","Coyote":"🦊","Orque":"🐳","Corbeau":"🐦",
+  "Toucan":"🦜","Flamant":"🦩","Hibou":"🦉","Perroquet":"🦜","Ours":"🐻","Tigre":"🐯","Leopard":"🐆","Panda":"🐼","Hippopotame":"🦛","Rhinoceros":"🦏","Loup":"🐺","La lune":"🌙","Le soleil":"☀️","Les nuages":"☁️","La nuit":"🌙","En hiver":"❄️","Avant la pluie":"⛈️","La glace":"🧊","Le vent":"🌬️","Eau et soleil":"💧","Sel et sucre":"🧂","Vent et pluie":"🌧️","Froid et neige":"❄️","La pluie gelee":"🌨️","Glace et vent":"🧊","Sable et pluie":"🏜️","Zebre":"🦓","Chameau":"🐪","Lama":"🦙","Hippopotame":"🦛","Rhinoceros":"🦏",
+  "Loup":"🐺","Chacal":"🦋","Coyote":"🦎","Orque":"🐳","Corbeau":"🐦",
   "Lapereau":"🐰","Poulain":"🐴","Faon":"🦌","Souriceau":"🐭",
   "Ete":"☀️","Automne":"🍂",
   "La neige":"❄️","Les fleurs":"🌸","Les glacons":"🧊","Le vent":"🌬️",
@@ -142,7 +142,7 @@ const CI={
   "Cercle":"⭕","Carre":"⬛","Triangle":"🔺",
   "Le nez":"👃","Les yeux":"👀","La bouche":"👅","Les oreilles":"👂","Les mains":"✋",
   "Rouge":"🔴","Bleu":"🔵","Vert":"🟢","Jaune":"🟡","Orange":"🟠","Violet":"🟣","Gris":"🩶","Blanc":"⚪","Noir":"⚫","Marron":"🟤",
-  "Lion":"🦁","Tigre":"🐯","Elephant":"🐘","Girafe":"🦒","Renard":"🦊","Dauphin":"🐬","Baleine":"🐋","Requin":"🦈","Pingouin":"🐧","Manchot":"🐧",
+  "Lion":"🦁","Tigre":"🐯","Elephant":"🐘","Girafe":"🦒","Renard":"🦊","Dauphin":"🐬","Baleine":"🐋","Requin":"🦈","Pingouin":"🐧","Manchot":"🦆",
   "Chiot":"🐶","Chaton":"🐱","Veau":"🐄","Agneau":"🐑","Poussin":"🐣",
   "Meuh":"🐮","Croa":"🐸","Cocorico":"🐓","Bee":"🐑","Coin":"🦆",
   "0":"🞫","1":"1️⃣","2":"2️⃣","3":"3️⃣","4":"4️⃣","5":"5️⃣","6":"6️⃣","7":"7️⃣","8":"8️⃣","9":"9️⃣","10":"🔟",
@@ -154,7 +154,7 @@ const CI={
   "Printemps":"🌸","Ete":"☀️","Automne":"🍂","Hiver":"❄️",
   "0":"0️⃣","1":"1️⃣","2":"2️⃣","3":"3️⃣","4":"4️⃣","5":"5️⃣","6":"6️⃣","7":"7️⃣","8":"8️⃣","9":"9️⃣","10":"🔟",
   "Rouge":"🔴","Bleu":"🔵","Vert":"🟢","Jaune":"🟡","Orange":"🟠","Violet":"🟣","Rose":"🌸","Gris":"🩶","Blanc":"⚪","Noir":"⚫","Marron":"🟤",
-  "Lion":"🦁","Tigre":"🐯","Elephant":"🐘","Girafe":"🦒","Renard":"🦊","Dauphin":"🐬","Baleine":"🐋","Requin":"🦈","Pingouin":"🐧","Manchot":"🐧",
+  "Lion":"🦁","Tigre":"🐯","Elephant":"🐘","Girafe":"🦒","Renard":"🦊","Dauphin":"🐬","Baleine":"🐋","Requin":"🦈","Pingouin":"🐧","Manchot":"🦆",
   "Chiot":"🐶","Chaton":"🐱","Veau":"🐄","Agneau":"🐑","Poussin":"🐣","Poulain":"🐴","Chevreau":"🐐",
   "Meuh":"🐮","Croa":"🐸","Cocorico":"🐓","Bee":"🐑","Coin":"🦆","Miaou":"🐱","Ouaf":"🐕",
   "Oui":"✅","Non":"❌","Vivant":"🌱","Non-vivant":"🪨","Vivante":"🌱","Non-vivante":"🪨",
@@ -300,11 +300,11 @@ const GD={
   ]},
   animaux:{title:"Animaux",emoji:"🐾",color:"#FF8C42",bg:"#FFF3E6",games:[
     {id:"animal_name",title:"Quel animal ?",emoji:"🐾",questions:[
-      {display:"🦁",prompt:"Comment s appelle cet animal ?",choices:["Tigre","Lion","Leopard","Guepard"],answer:"Lion"},
+      {display:"🦁",prompt:"Comment s appelle cet animal ?",choices:["Tigre","Lion","Leopard","Panda"],answer:"Lion"},
       {display:"🐘",prompt:"Comment s appelle cet animal ?",choices:["Hippopotame","Rhinoceros","Elephant","Girafe"],answer:"Elephant"},
       {display:"🦒",prompt:"Comment s appelle cet animal ?",choices:["Zebre","Chameau","Girafe","Lama"],answer:"Girafe"},
-      {display:"🐧",prompt:"Comment s appelle cet animal ?",choices:["Manchot","Corbeau","Pingouin","Perroquet"],answer:"Pingouin"},
-      {display:"🦊",prompt:"Comment s appelle cet animal ?",choices:["Loup","Renard","Chacal","Coyote"],answer:"Renard"},
+      {display:"🐧",prompt:"Comment s appelle cet animal ?",choices:["Toucan","Flamant","Pingouin","Perroquet"],answer:"Pingouin"},
+      {display:"🦊",prompt:"Comment s appelle cet animal ?",choices:["Loup","Renard","Tigre","Ours"],answer:"Renard"},
       {display:"🐬",prompt:"Comment s appelle cet animal ?",choices:["Baleine","Requin","Dauphin","Orque"],answer:"Dauphin"},
     ]},
     {id:"animal_legs",title:"Combien de pattes ?",emoji:"🦵",questions:[
@@ -459,10 +459,10 @@ const GD={
       {display:"🍄",prompt:"Le champignon est-il vivant ?",choices:["Vivant","Non-vivant"],answer:"Vivant"},
     ]},
     {id:"why",title:"Pourquoi ?",emoji:"💡",questions:[
-      {display:"🌙",prompt:"Pourquoi fait-il nuit ?",choices:["La lune eteint le soleil","La Terre tourne","Le soleil dort","Les nuages cachent tout"],answer:"La Terre tourne"},
-      {display:"🌈",prompt:"Quand apparait un arc-en-ciel ?",choices:["La nuit","Apres la pluie","En hiver","Avant l orage"],answer:"Apres la pluie"},
-      {display:"❄️",prompt:"Comment se forme la neige ?",choices:["La pluie gelee","Le nuage qui tombe","La glace qui fond","Le vent froid"],answer:"La pluie gelee"},
-      {display:"🌱",prompt:"De quoi les plantes ont-elles besoin pour pousser ?",choices:["Eau et lumiere","Sel et sucre","Vent et pluie","Froid et neige"],answer:"Eau et lumiere"},
+      {display:"🌙",prompt:"Pourquoi fait-il nuit ?",choices:["La lune","La Terre tourne","Le soleil","Les nuages"],answer:"La Terre tourne"},
+      {display:"🌈",prompt:"Quand apparait un arc-en-ciel ?",choices:["La nuit","Apres la pluie","En hiver","Avant la pluie"],answer:"Apres la pluie"},
+      {display:"❄️",prompt:"Comment se forme la neige ?",choices:["La pluie gelee","Les nuages","La glace","Le vent"],answer:"La pluie gelee"},
+      {display:"🌱",prompt:"De quoi les plantes ont-elles besoin pour pousser ?",choices:["Eau et soleil","Sel et sucre","Vent et pluie","Froid et neige"],answer:"Eau et soleil"},
     ]},
   ]},
 };
