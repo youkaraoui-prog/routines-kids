@@ -55,11 +55,12 @@ const ELEVEN_KEY="sk_c443c75ac1d31119253ec8cbe9a7a43f0c6cbb56a0307013";
 const VOICE_ID="kwhMCf63M8O3rCfnQ3oQ";
 const aBuf={};let actx=null;
 function getCtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx;}
+function stripEmoji(t){return t.replace(/[^\x00-\x7F\xA0-\xFF\u0100-\u024F\u1E00-\u1EFF ]/g,"").trim();}
 async function speak(t){
   try{
     getCtx();let buf=aBuf[t];
     if(!buf){
-      const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+VOICE_ID,{method:"POST",headers:{"xi-api-key":ELEVEN_KEY,"Content-Type":"application/json"},body:JSON.stringify({text:t,model_id:"eleven_multilingual_v2",voice_settings:{stability:.55,similarity_boost:.85,style:.2,use_speaker_boost:true}})});
+      const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+VOICE_ID,{method:"POST",headers:{"xi-api-key":ELEVEN_KEY,"Content-Type":"application/json"},body:JSON.stringify({text:t,model_id:"eleven_turbo_v2_5",voice_settings:{stability:.25,similarity_boost:.6,style:.5,use_speaker_boost:true}})});
       if(!r.ok)throw new Error();buf=await r.arrayBuffer();aBuf[t]=buf;
     }
     const ctx=getCtx(),dec=await ctx.decodeAudioData(buf.slice(0)),src=ctx.createBufferSource();
@@ -113,6 +114,42 @@ const TARGET=200;
 const EMOJIS=["🚽","🫧","🪥","👕","🛏️","🧤","🥾","💦","🧸","🍝","🩳","📚","🥣","🍽️","🤫","🎒","🌟","🎨","🎵","🏃","🍎","📖","🧩","🎮","🌈","🏠","⭐","🎯","🚀","🌺"];
 
 const CI={
+  "Zebre":"🦓","Chameau":"🐪","Lama":"🦙","Hippopotame":"🦛","Rhinoceros":"🦏",
+  "Loup":"🐺","Chacal":"🦊","Coyote":"🦊","Orque":"🐳","Corbeau":"🐦",
+  "Lapereau":"🐰","Poulain":"🐴","Faon":"🦌","Souriceau":"🐭",
+  "Ete":"☀️","Automne":"🍂",
+  "La neige":"❄️","Les fleurs":"🌸","Les glacons":"🧊","Le vent":"🌬️",
+  "Eau et lumiere":"💧","Sel et sucre":"🧂","Vent et pluie":"🌧️","Froid et neige":"❄️",
+  "La Terre tourne":"🌍","Apres la pluie":"🌈","La pluie gelee":"🌨️",
+  "L arbre":"🌳","L elephant":"🐘","La souris":"🐭","La pomme":"🍎",
+  "La fourmi":"🐜","Le lion":"🦁","La maison":"🏠","L immeuble":"🏢",
+  "La Terre":"🌍","L espace":"🌌","L'espace":"🌌",
+  "Vivante":"🌱","Non-vivant":"🪙","Non-vivante":"🪙",
+  "Orageux":"⛈️","Ensoleille":"☀️","Pluvieux":"🌧️","Neigeux":"🌨️","Nuageux":"☁️",
+  "Eau":"💧","Foret":"🌲","Desert":"🏜️","Montagne":"⛰️","Savane":"🌾",
+  "Arctique":"🧊","Jungle":"🌳","Ocean":"🌊","Lac":"💧",
+  "Vroom":"🚗","Tchou tchou":"🚂","Pouet pouet":"📣","Zoom":"💨","Pilou pilou":"🚑",
+  "Pilote":"👨‍✈️","Capitaine":"⚓","Conducteur":"🚃","Chauffeur":"🚌","Astronaute":"👨‍🚀",
+  "La mer":"🌊","Le ciel":"☁️","La route":"🛣️","Les rails":"🛤️",
+  "Le ciel":"☁️","La route":"🛣️","Les rails":"🛤️",
+  "Avion":"✈️","Train":"🚂","Bateau":"⛵","Velo":"🚲","Fusee":"🚀","Helicoptere":"🚁",
+  "Bus":"🚌","Metro":"🚇","Moto":"🏍️","Scooter":"🛵",
+  "Flotte":"🪙","Coule":"⬇️",
+  "Chaud":"🔥","Froid":"🧊","Chaude":"🔥","Froide":"🧊",
+  "Vivant":"🌱","Vivante":"🌱","Non-vivant":"🪙","Non-vivante":"🪙",
+  "Fruit":"🍎","Legume":"🥕",
+  "Oui":"✅","Non":"❌",
+  "Cercle":"⭕","Carre":"⬛","Triangle":"🔺",
+  "Le nez":"👃","Les yeux":"👀","La bouche":"👅","Les oreilles":"👂","Les mains":"✋",
+  "Rouge":"🔴","Bleu":"🔵","Vert":"🟢","Jaune":"🟡","Orange":"🟠","Violet":"🟣","Gris":"🩶","Blanc":"⚪","Noir":"⚫","Marron":"🟤",
+  "Lion":"🦁","Tigre":"🐯","Elephant":"🐘","Girafe":"🦒","Renard":"🦊","Dauphin":"🐬","Baleine":"🐋","Requin":"🦈","Pingouin":"🐧","Manchot":"🐧",
+  "Chiot":"🐶","Chaton":"🐱","Veau":"🐄","Agneau":"🐑","Poussin":"🐣",
+  "Meuh":"🐮","Croa":"🐸","Cocorico":"🐓","Bee":"🐑","Coin":"🦆",
+  "0":"🞫","1":"1️⃣","2":"2️⃣","3":"3️⃣","4":"4️⃣","5":"5️⃣","6":"6️⃣","7":"7️⃣","8":"8️⃣","9":"9️⃣","10":"🔟",
+  "Tournesol":"🌻","Sapin":"🌲","Chene":"🌳",
+  "Printemps":"🌸","Hiver":"❄️","Ete":"☀️","Automne":"🍂",
+  "La pluie gelee":"🌨️","Eau et lumiere":"💧",
+
   "Foret":"🌲","Desert":"🏜️","Mer":"🌊","Montagne":"⛰️","Arctique":"🧊","Savane":"🌾","Jungle":"🌿",
   "Printemps":"🌸","Ete":"☀️","Automne":"🍂","Hiver":"❄️",
   "0":"0️⃣","1":"1️⃣","2":"2️⃣","3":"3️⃣","4":"4️⃣","5":"5️⃣","6":"6️⃣","7":"7️⃣","8":"8️⃣","9":"9️⃣","10":"🔟",
@@ -160,8 +197,61 @@ const FACTS={
   "Jaune":["🟡 Le jaune est la couleur la plus visible de loin !","🟡 Le soleil parait jaune mais sa lumiere est en realite blanche !","🟡 Le jaune est utilise pour les panneaux d avertissement !","🟡 Les abeilles voient le jaune differemment de nous !","🟡 Les gilets jaunes des ouvriers les rendent visibles de loin !"],
 };
 
+
+const FACTS2={
+  "2":["Le chiffre 2 ressemble a un cygne sur l eau !","Un velo a 2 roues comme une moto !","Les humains ont 2 yeux, 2 oreilles et 2 mains !","La Terre a 2 poles, le Nord et le Sud !","Un cygne a 2 pattes et 2 ailes !"],
+  "3":["Le triangle a 3 cotes et 3 angles !","Les feux de signalisation ont 3 couleurs !","Un trepied a 3 pieds pour tenir debout !","Les trois couleurs primaires sont rouge, bleu et jaune !","Un trefle porte-bonheur a 3 feuilles !"],
+  "4":["Un carre a 4 cotes egaux !","Les voitures ont 4 roues !","Il y a 4 saisons dans une annee !","Un chat a 4 pattes comme le chien !","Le carre est la forme la plus stable apres le triangle !"],
+  "5":["Une etoile a 5 branches !","Les humains ont 5 sens : vue, ouie, odorat, gout et toucher !","On compte sur 5 doigts par main !","Un pentagone a 5 cotes !","Notre systeme solaire a 8 planetes mais 5 sont visibles a l oeil nu !"],
+  "6":["Un insecte a toujours 6 pattes !","Un hexagone a 6 cotes comme une cellule de ruche !","Un de a 6 faces et 6 chiffres !","Les abeilles construisent des cellules a 6 cotes pour economiser la cire !","La guitare a 6 cordes !"],
+  "8":["Les araignees ont 8 pattes et parfois 8 yeux !","Une pieuvre a 8 bras !","L infini ressemble au chiffre 8 couche sur le cote !","Un octogone a 8 cotes !","Les pieuvres sont tres intelligentes pour des animaux a 8 bras !"],
+  "Vert":["Le vert est la couleur preferee des plantes !","Les feuilles sont vertes grace a la chlorophylle !","Le vert signifie aller aux feux de signalisation !","Les grenouilles sont souvent vertes pour se camoufler !","Les emeraudes sont des pierres precieuses vertes !"],
+  "Rouge":["Le rouge est la couleur du sang et du coeur !","Le rouge est la premiere couleur que les bebes reconnaissent !","Les pompiers ont des camions rouges pour etre bien vus !","Le rouge signifie stop aux feux de signalisation !","Les tomates sont rouges quand elles sont bien mures !"],
+  "Bleu":["Le ciel est bleu a cause de la lumiere du soleil dans l air !","La mer est bleue car elle reflete le ciel !","Le bleu est la couleur preferee de la plupart des gens dans le monde !","Les dauphins vivent dans une eau bleue et profonde !","Le bleu calme les gens c est pour ca qu on l utilise dans les hopitaux !"],
+  "Orange":["L orange est un melange de rouge et de jaune !","Le coucher de soleil est orange et rouge !","Les tigres sont oranges pour se camoufler dans les herbes jaunes !","Les carottes sont oranges grace au beta-carotene !","Les citrouilles d Halloween sont de couleur orange !"],
+  "Violet":["Le violet est un melange de rouge et de bleu !","Les raisins et les mures sont violets !","La lavande est une fleur violette qui sent tres bon !","Le violet etait autrefois la couleur des rois car le colorant etait rare !","Les pieuvres peuvent changer de couleur selon leur humeur !"],
+  "Gris":["Les elephants sont gris pour proteger leur peau du soleil fort !","Les nuages sont gris quand ils sont tres charges de pluie !","Les requins sont gris pour se fondre dans l eau sombre !","Le gris vient du melange de blanc et de noir !","Le cerveau humain est de couleur gris-rose !"],
+  "Blanc":["La neige est blanche car elle reflechit toute la lumiere !","Les ours polaires ont des poils transparents qui paraissent blancs !","Les nuages blancs sont faits de minuscules gouttes d eau !","Le lait est blanc car il contient des graisses et des proteines !","Les cygnes sont de grands oiseaux blancs tres elegants !"],
+  "Meuh":["La vache dit meuh pour appeler son veau !","Les vaches peuvent reconnaitre leur nom et y repondre !","Une vache produit jusqu a 30 litres de lait par jour !","Les vaches ont 4 estomacs pour bien digerer l herbe !","Les vaches peuvent reconnaitre jusqu a 100 autres vaches !"],
+  "Cocorico":["Le coq chante au lever du soleil pour reveiller la ferme !","Le coq chante pour marquer son territoire !","Les coqs ont une crete rouge sur la tete !","Le coq gaulois est le symbole de la France !","Les poules pondent un oeuf presque chaque jour !"],
+  "Croa":["Les grenouilles respirent aussi par leur peau !","Les grenouilles peuvent sauter 20 fois leur propre longueur !","Il y a plus de 6000 especes de grenouilles differentes !","Les grenouilles mangent les insectes nuisibles comme les moustiques !","Les grenouilles hibernent sous la boue en hiver !"],
+  "Coin":["Les canards impermeabilisent leurs plumes avec de l huile !","Les canetons suivent le premier etre vivant qu ils voient apres la naissance !","Les canards peuvent dormir avec un oeil ouvert !","Le canard plonge la tete dans l eau pour trouver sa nourriture !","Les plumes du canard repoussent naturellement l eau !"],
+  "Bee":["Les moutons peuvent reconnaitre jusqu a 50 autres moutons !","La laine d un mouton pousse jusqu a 10 cm par an !","Les moutons peuvent se souvenir des visages pendant des annees !","Un troupeau de moutons s entraide pour se proteger des predateurs !","Les moutons broutent jusqu a 8 heures par jour !"],
+  "Carre":["Un carre a 4 cotes tous egaux et 4 angles droits !","Les carreaux de salle de bain sont souvent carres !","Un echiquier a 64 cases carrees noires et blanches !","Un carre est un rectangle particulier ou tous les cotes sont egaux !","Les boites sont souvent carrees ou rectangulaires !"],
+  "Foret":["Les forets couvrent 30 pourcent de la surface de la Terre !","Un seul arbre peut abriter des centaines d animaux differents !","Les arbres de la foret produisent l oxygene qu on respire !","La foret amazonienne est appelee le poumon de la Terre !","Les champignons poussent dans les forets humides !"],
+  "Desert":["Le Sahara est le plus grand desert chaud du monde !","Il peut neiger dans certains deserts la nuit car il fait tres froid !","Les cactus stockent l eau dans leur tige epaisse !","Les dunes de sable se deplacent lentement avec le vent !","Le chameau peut rester jusqu a 2 semaines sans boire !"],
+  "Ensoleille":["Le soleil est notre etoile la plus proche, a 150 millions de km !","La lumiere du soleil met 8 minutes pour arriver sur Terre !","Sans le soleil, aucune vie ne serait possible sur Terre !","Les panneaux solaires transforment la lumiere en electricite !","Le soleil se leve toujours a l Est et se couche a l Ouest !"],
+  "Pluvieux":["La pluie vient des nuages qui se chargent d eau de mer evaporee !","L eau de pluie est douce alors que l eau de mer est salee !","La pluie remplit les lacs et les rivieres !","Certains deserts ne voient pas la pluie pendant des annees !","La foret tropicale recoit plus de 2 metres de pluie par an !"],
+  "Orageux":["La foudre tombe 100 fois par seconde sur toute la Terre !","Un eclair est 5 fois plus chaud que la surface du soleil !","Le tonnerre est le bruit de l air qui s ecarte autour de l eclair !","On compte les secondes entre eclair et tonnerre pour mesurer la distance !","Les paratonnerres protegent les batiments de la foudre !"],
+  "Neigeux":["Chaque flocon de neige a une forme unique dans le monde entier !","La neige est de l eau gelee en minuscules cristaux !","La neige garde la chaleur comme une couverture pour les plantes !","Les Inuits ont plus de 50 mots pour decrire les differents types de neige !","Un metre de neige correspond a environ 10 cm d eau fondue !"],
+  "Pilote":["Il faut plus de 1500 heures de vol pour devenir pilote de ligne !","Un pilote controle l avion avec des joysticks et des boutons !","Les pilotes voient le monde a 10 000 metres d altitude !","Il y a toujours deux pilotes dans un avion de ligne pour la securite !","Les pilotes s entrainent sur simulateur de vol avant de voler pour de vrai !"],
+  "Capitaine":["Le capitaine est responsable de tout son equipage et de ses passagers !","Les capitaines utilisent des cartes marines et GPS pour naviguer !","Le capitaine commande le navire depuis la timonerie au sommet !","Le capitaine est le dernier a quitter le navire en cas de danger !","Les grands navires suivent des routes maritimes tres precises !"],
+  "Conducteur":["Les premiers trains etaient conduits a la vapeur de charbon !","Un conducteur de train peut transporter des centaines de personnes !","Les conducteurs de train suivent des rails precis sans volant !","Un TGV peut transporter 1000 personnes en meme temps !","Les conducteurs doivent connaitre tous les signaux du chemin de fer !"],
+  "Chauffeur":["Les premiers autobus etaient tires par des chevaux !","Un chauffeur de bus peut conduire jusqu a 80 personnes !","Les chauffeurs de bus doivent connaitre tout leur trajet par coeur !","Le premier autobus a moteur a ete invente en 1895 !","Les chauffeurs de taxi connaissent toutes les rues de leur ville !"],
+  "Astronaute":["Les astronautes s entrainent pendant des annees avant l espace !","Dans l espace, les astronautes flottent car il n y a pas de pesanteur !","Les astronautes voient 16 levers de soleil par jour sur la station spatiale !","Les astronautes doivent faire du sport chaque jour dans l espace !","Les astronautes mangent des aliments en poche dans l espace !"],
+  "Vivant":["Les etres vivants grandissent, se reproduisent et finissent par mourir !","Les plantes sont des etres vivants comme les animaux !","Les champignons sont vivants mais ne sont pas des plantes !","Les bacteries sont de minuscules etres vivants invisibles a l oeil nu !","Meme les coraux sont des etres vivants sous la mer !"],
+  "Non-vivant":["Les pierres se forment pendant des millions d annees sans bouger !","Les voitures sont fabriquees par des humains avec des materiaux naturels !","Les cristaux grandissent comme des plantes mais ne sont pas vivants !","Les robots ne sont pas vivants meme quand ils se deplacent !","Les diamants sont des pierres tres dures faites de carbone pur !"],
+  "Vivante":["Les etres vivants grandissent, se nourrissent et se reproduisent !","Les plantes captent la lumiere du soleil pour fabriquer leur nourriture !","Une bacterie est si petite qu on ne peut pas la voir sans microscope !","Meme les coraux sont des etres vivants sous la mer !","Les arbres communiquent entre eux par leurs racines sous la terre !"],
+  "Non-vivante":["Les pierres se forment en millions d annees grace a la chaleur et la pression !","Les cristaux grandissent mais ne respirent pas !","Les robots sont des machines creees par des ingenieurs !","Un diamant est la matiere naturelle la plus dure de la planete !","Les mineraux comme le sel ne respirent pas et ne mangent pas !"],
+  "Fruit":["Un fruit contient les graines de la plante a l interieur !","Les fruits sont sucres pour attirer les animaux qui mangent les graines !","Une tomate est en fait un fruit et non un legume !","Les fruits ont des vitamines qui aident le corps a grandir et rester en sante !","Il existe plus de 2000 varietes de pommes dans le monde !"],
+  "Legume":["Les legumes sont souvent les feuilles, racines ou tiges des plantes !","Les carottes sont les racines de la plante carotte !","On mange les feuilles du chou et de la laitue !","Les legumes verts contiennent beaucoup de vitamines et de mineraux !","Les legumes contiennent des fibres qui aident la digestion !"],
+  "Tournesol":["Le tournesol tourne sa tete pour suivre le soleil toute la journee !","Les graines de tournesol servent a faire de l huile de cuisine !","Un tournesol peut atteindre jusqu a 3 metres de hauteur !","Les abeilles adorent le pollen jaune des tournesols !","Un tournesol est en fait compose de centaines de petites fleurs !"],
+  "Sapin":["Les sapins gardent leurs aiguilles toute l annee, meme en hiver !","Les aiguilles de sapin contiennent de la vitamine C !","Les sapins peuvent vivre plus de 500 ans !","La resine de sapin sert a fabriquer des colles et des vernis !","Le plus vieux sapin connu a plus de 9500 ans en Suede !"],
+  "Chaude":["La temperature du soleil en surface est de 5500 degres !","La lave d un volcan peut atteindre 1200 degres en sortant !","La chaleur monte toujours vers le haut dans l air !","La temperature normale du corps humain est de 37 degres !","Les metaux fondent et deviennent liquides quand ils sont tres chauds !"],
+  "Froide":["La temperature la plus froide possible est moins 273 degres !","La glace fond exactement a 0 degre !","Les poles sont les endroits les plus froids de toute la Terre !","Le froid preserve les aliments car les microbes agissent moins vite !","Certaines grenouilles se figent completement en hiver et se reveillent au printemps !"],
+  "Chaud":["Le desert peut atteindre 58 degres en plein soleil de l apres-midi !","La chaleur peut faire fondre le goudron des routes en ete !","La lave d un volcan est du rocher fondu a plus de 700 degres !","La chaleur se transmet des objets chauds vers les objets froids !","Les radiateurs utilisent la chaleur pour rechauffer les maisons !"],
+  "Froid":["La neige peut garder les animaux au chaud comme une couverture !","L air froid est plus lourd et tombe vers le bas !","Les pingouins se serrent les uns contre les autres pour partager leur chaleur !","Le froid ralentit tout, meme les bacteries qui font pourrir les aliments !","Les glaons prennent la forme du recipient quand l eau gele !"],
+  "Flotte":["Le bois flotte car il est moins dense que l eau !","Un bateau en acier flotte grace a sa forme creuse qui piege l air !","La glace flotte sur l eau, c est pour ca qu on voit les icebergs !","90 pourcent d un iceberg est cache sous l eau !","Dans la Mer Morte tres salee, tout le monde flotte sans effort !"],
+  "Coule":["Une pierre coule car elle est plus dense et plus lourde que l eau !","Dans la Mer Morte tres salee, meme les pierres coulent plus lentement !","Un sous-marin peut couler ou flotter en controlant l air dans ses reservoirs !","L acier coule sauf quand on le creuse en forme de bateau !","Plus un objet est dense par rapport a sa taille, plus il coule vite !"],
+  "Les yeux":["Nos yeux peuvent distinguer 10 millions de couleurs differentes !","L oeil humain bouge plus de 100 000 fois par jour !","Les yeux des bebes ont deja leur taille definitive a la naissance !","Les chats voient 6 fois mieux que nous dans l obscurite !","Nos yeux focalisent automatiquement en moins d une seconde !"],
+  "Le nez":["On peut distinguer plus d un trillion d odeurs differentes !","Le nez se souvient des odeurs bien mieux que les images !","Les chiens ont un nez 10 000 fois plus puissant que le notre !","Le nez chauffe et filtre l air avant qu il entre dans les poumons !","Quand on est enrhume, on sent moins bien car le nez est bouche !"],
+  "La bouche":["Les papilles gustatives sur la langue detectent 5 saveurs principales !","Nous produisons jusqu a 1 litre de salive par jour !","Les dents de lait tombent pour laisser place aux dents definitives !","Les dents sont aussi dures que les pierres !","La langue est le muscle le plus fort du corps par rapport a sa taille !"],
+  "Les oreilles":["Les oreilles captent les vibrations de l air pour entendre les sons !","Les elephants ont de grandes oreilles pour se rafraichir en eventant !","Les chauves-souris entendent des sons que les humains ne peuvent pas entendre !","Les oreilles continuent a grandir toute notre vie !","Le son voyage a 340 metres par seconde dans l air !"],
+  "Les mains":["Nos mains ont 27 os chacune !","Les empreintes digitales sont uniques pour chaque personne dans le monde !","La peau de nos mains est l une des plus sensibles du corps !","Les mains peuvent faire plus de 50 gestes distincts !","Les bouts de nos doigts ont des capteurs pour sentir les textures !"],
+};
+const FACTS_COMBINED=Object.assign({},FACTS,FACTS2);
 function getNextFact(pid,key){
-  const arr=FACTS[key];if(!arr||!arr.length)return null;
+  const arr=FACTS_COMBINED[key];if(!arr||!arr.length)return null;
   const sk="fact_"+pid+"_"+key;let shown=[];
   try{shown=JSON.parse(localStorage.getItem(sk)||"[]");}catch{}
   const avail=arr.map((_,i)=>i).filter(i=>!shown.includes(i));
@@ -699,7 +789,7 @@ function GameScreen({catKey,gameId,profile,gameScores,onBack,onComplete}){
     else{setStreak(0);speak("Presque ! C est "+q.answer);}
     const f=getNextFact(profile?profile.id:"guest",q.answer);
     setTimeout(()=>{
-      if(f){setFact(f);setShowFact(true);speak(f.text);}
+      if(f){setFact(f);setShowFact(true);speak(stripEmoji(f.text));}
       else if(qIdx<game.questions.length-1){setQIdx(i=>i+1);setSelected(null);setAnswered(false);}
       else setFinished(true);
     },1000);
