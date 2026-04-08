@@ -63,13 +63,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .drag-over{border-top:3px dashed var(--orange) !important;}
 
 /* Logo letters */
-.logo span:nth-child(1){color:#FF6B6B}
-.logo span:nth-child(2){color:#FF8C42}
-.logo span:nth-child(3){color:#FFD166}
-.logo span:nth-child(4){color:#6BCB77}
-.logo span:nth-child(5){color:#4ECDC4}
-.logo span:nth-child(6){color:#4D96FF}
-.logo span:nth-child(7){color:#C77DFF}
+.logo span:nth-child(1){color:#E63000}
+.logo span:nth-child(2){color:#EF4800}
+.logo span:nth-child(3){color:#F76000}
+.logo span:nth-child(4){color:#FD8000}
+.logo span:nth-child(5){color:#FFA500}
+.logo span:nth-child(6){color:#FFC200}
+.logo span:nth-child(7){color:#FFD700}
 </style>
 </head>
 <body>
@@ -154,7 +154,7 @@ const DEFAULT_TASKS={
   ],
 };
 
-const PROFILES_DEF=[{id:'noe',name:'Noé',heroId:'bear'},{id:'ilyan',name:'Ilyan',heroId:'lion'}];
+const PROFILES_DEF=[{id:'noe',name:'Noé',heroId:'bear',photoUrl:null},{id:'ilyan',name:'Ilyan',heroId:'lion',photoUrl:null}];
 const TARGET=200;
 const EMOJIS=['🚽','🫧','🪥','👕','🛏️','🧤','🥾','💦','🧸','🍝','🩳','📚','🥣','🍽️','🤫','🎒','🌟','🎨','🎵','🏃','🍎','📖','🧩','🎮','🌈','🏠','⭐','🎯','🚀','🌺'];
 
@@ -192,6 +192,13 @@ const CHOICE_ICONS={
   'Tournesol':'🌻','Rose':'🌹','Tulipe':'🌷','Marguerite':'🌼','Sapin':'🌲','Chêne':'🌳','Érable':'🍁','Platane':'🌳',
   // Tailles
   "L'éléphant":'🐘','La souris':'🐭',"L'arbre":'🌳','La plante':'🌱','La Terre':'🌍','La pomme':'🍎','La fourmi':'🐜','Le lion':'🦁','La maison':'🏠',"L'immeuble":'🏢',
+  // Transports
+  'Avion':'✈️','Train':'🚂','Bateau':'⛵','Hélicoptère':'🚁','Vélo':'🚲','Fusée':'🚀',
+  'Bus':'🚌','Métro':'🚇','Tramway':'🚋','Moto':'🏍️','Scooter':'🛵','Ferry':'🛳️',
+  'La mer':'🌊','Le ciel':'☁️','La route':'🛣️','Les rails':'🛤️',"L'espace":'🌌',
+  'Vroom':'🚗','Tchou tchou':'🚂','Pouet pouet':'📣','Zoom':'💨','Pilou pilou':'🚑',
+  'Pilote':'👨‍✈️','Conducteur':'🚃','Capitaine':'⚓','Chauffeur':'🚌','Astronaute':'👨‍🚀',
+  'Trottinette':'🛴','Tricycle':'🛺',
   // Sciences
   'La Terre tourne':'🌍','Après la pluie':'🌈','La pluie gelée':'🌨️','Eau + lumière':'💧',
   // Mélange couleurs
@@ -199,6 +206,49 @@ const CHOICE_ICONS={
   // Pattes
   'La souris':'🐭',"L'arbre":'🌳',
 };
+
+
+/* ── FACTS ── */
+const FACTS={
+  'Lion':["🦁 Le lion peut rugir si fort qu'on l'entend à 8 km !","🦁 Le lion dort jusqu'à 20 heures par jour !","🦁 C'est la lionne qui chasse, pas le lion !","🦁 Un groupe de lions s'appelle une troupe !","🦁 Les lionceaux naissent avec des taches qui disparaissent en grandissant !"],
+  'Éléphant':["🐘 L'éléphant est le plus grand animal terrestre !","🐘 Il mange jusqu'à 150 kg de plantes par jour !","🐘 Les éléphants peuvent reconnaître leur reflet dans un miroir !","🐘 Un bébé éléphant pèse déjà 100 kg à la naissance !","🐘 Les éléphants communiquent par des sons trop graves pour nos oreilles !"],
+  'Girafe':["🦒 La girafe est l'animal le plus grand du monde !","🦒 Sa langue mesure 45 cm et elle est bleue-violette !","🦒 La girafe ne dort que 30 minutes par jour !","🦒 Un bébé girafe fait déjà 1,80 m à la naissance !","🦒 La girafe peut courir à 55 km/h !"],
+  'Dauphin':["🐬 Les dauphins dorment avec un seul oeil ouvert !","🐬 Les dauphins s'appellent entre eux par des noms uniques !","🐬 Un dauphin peut nager à 55 km/h !","🐬 Les dauphins jouent souvent juste pour le plaisir !","🐬 Les dauphins respirent de l'air comme nous !"],
+  'Pingouin':["🐧 Les pingouins ne vivent qu'au Pôle Sud !","🐧 Le papa pingouin couve l'oeuf sur ses pieds pendant 2 mois !","🐧 Les pingouins peuvent plonger à 500 m de profondeur !","🐧 Les pingouins marchent maladroitement mais nagent super vite !","🐧 Un pingouin peut vivre jusqu'à 20 ans !"],
+  'Renard':["🦊 Le renard peut entendre une souris à 100 m !","🦊 Le renard utilise le champ magnétique de la Terre pour chasser !","🦊 Un bébé renard s'appelle un renardeau !","🦊 Le renard roux peut faire plus de 40 sons différents !","🦊 Le renard peut sauter très haut pour attraper des oiseaux !"],
+  'Avion':["✈️ Le premier avion a volé seulement 12 secondes en 1903 !","✈️ Un avion moderne peut transporter plus de 500 passagers !","✈️ Les avions volent à environ 900 km/h !","✈️ L'avion le plus grand mesure 73 mètres !","✈️ Un avion fait le tour de la Terre en environ 45 heures !"],
+  'Train':["🚂 Le premier train a été inventé en 1804 !","🚂 Le train le plus rapide roule à plus de 600 km/h au Japon !","🚂 Les premiers trains transportaient du charbon, pas des gens !","🚂 En France, le TGV peut aller jusqu'à 320 km/h !","🚂 Il y a plus de 1 million de km de voies ferrées dans le monde !"],
+  'Bateau':["⛵ Les humains naviguent depuis plus de 50 000 ans !","⛵ Le plus grand bateau du monde mesure 400 mètres !","⛵ Un porte-avions peut transporter 90 avions !","⛵ Les bateaux en bois flottent grâce à leur forme creuse !","⛵ Le Titanic mesurait 269 mètres de long !"],
+  'Fusée':["🚀 Une fusée doit aller à 40 000 km/h pour quitter la Terre !","🚀 La fusée Saturn V pesait autant que 400 éléphants !","🚀 En 1969, des humains ont marché sur la Lune pour la 1ère fois !","🚀 L'ISS fait le tour de la Terre toutes les 90 minutes !","🚀 Une fusée brûle des millions de litres de carburant en décollant !"],
+  'Hélicoptère':["🚁 L'hélicoptère peut voler en arrière et rester en place !","🚁 L'idée vient de Léonard de Vinci il y a 500 ans !","🚁 Un hélicoptère peut décoller sans piste d'atterrissage !","🚁 Les pales tournent à 500 fois par minute !","🚁 Les hélicoptères de sauvetage volent souvent la nuit !"],
+  'Vélo':["🚲 Le vélo a été inventé en 1817 en Allemagne !","🚲 Faire du vélo est le transport le plus efficace qui existe !","🚲 Un cycliste pro peut rouler à 80 km/h !","🚲 Il y a plus de vélos en Chine que de voitures dans le monde !","🚲 Le vélo ne pollue pas du tout l'air !"],
+  'Hiver':["❄️ La neige n'est pas blanche — elle est transparente !","❄️ Chaque flocon de neige est unique !","❄️ L'ours brun dort tout l'hiver sans manger ni boire !","❄️ L'eau se dilate en gelant — c'est pour ça que les bouteilles éclatent !","❄️ En hiver, les jours sont plus courts car la Terre est inclinée !"],
+  'Printemps':["🌸 Au printemps les oiseaux reviennent après l'hiver !","🌸 Les abeilles se réveillent et recommencent à faire du miel !","🌸 Les fleurs utilisent les insectes pour se reproduire !","🌸 Au printemps, les jours rallongent de 2 minutes chaque jour !","🌸 C'est au printemps que naissent le plus de bébés animaux !"],
+  'Été':["☀️ En été, il y a jusqu'à 16 heures de lumière par jour !","☀️ Le soleil est à 150 millions de km de la Terre !","☀️ La lumière du soleil met 8 minutes pour arriver jusqu'à nous !","☀️ Les plantes grandissent 3 fois plus vite en été !","☀️ L'été, la surface de la mer peut atteindre 30 degrés !"],
+  'Automne':["🍂 Les feuilles changent car les arbres arrêtent de les nourrir !","🍂 Les écureuils cachent des milliers de noisettes en automne !","🍂 Les oiseaux migrateurs voyagent des milliers de km en automne !","🍂 Les champignons poussent surtout en automne après la pluie !","🍂 En automne, un arbre peut perdre jusqu'à 200 000 feuilles !"],
+  'Flotte':["🪵 Le bois flotte car il est moins dense que l'eau !","🪵 Un bateau en acier flotte grâce à sa forme creuse !","🪵 La glace flotte sur l'eau — c'est pour ça que les icebergs flottent !","🪵 90% d'un iceberg est caché sous l'eau !","🪵 Dans la Mer Morte, tout le monde flotte facilement !"],
+  'Coule':["⬇️ Une pierre coule car elle est plus lourde que l'eau !","⬇️ Dans la Mer Morte très salée, même les pierres coulent moins vite !","⬇️ Un sous-marin peut couler ou flotter en contrôlant l'air à bord !","⬇️ L'acier coule sauf quand il est façonné en forme de bateau !","⬇️ Plus un objet est dense, plus il coule vite !"],
+  'Les yeux':["👀 Nos yeux peuvent distinguer 10 millions de couleurs !","👀 L'oeil humain bouge plus de 100 000 fois par jour !","👀 Les yeux des bébés restent de la même taille toute leur vie !","👀 Les chats voient 6 fois mieux que nous dans le noir !","👀 Nos yeux focalisent automatiquement en moins d'une seconde !"],
+  'Le nez':["👃 On peut distinguer plus d'un trillion d'odeurs différentes !","👃 Le nez se souvient des odeurs mieux que les images !","👃 Les chiens ont un nez 10 000 fois plus puissant que le nôtre !","👃 Le nez chauffe l'air avant qu'il entre dans les poumons !","👃 Quand on est enrhumé, on sent moins bien car le nez est bouché !"],
+  'Cercle':["⭕ Le cercle est la forme la plus solide qui existe !","⭕ Les roues sont rondes pour rouler sans à-coups !","⭕ Le soleil, la lune et les planètes sont toutes rondes !","⭕ Une bulle de savon prend toujours la forme d'une sphère !","⭕ La Terre est légèrement aplatie aux pôles — pas parfaitement ronde !"],
+  'Triangle':["🔺 Le triangle est la forme la plus rigide en construction !","🔺 Les pyramides d'Égypte ont 4 faces triangulaires !","🔺 La Tour Eiffel utilise des milliers de petits triangles en acier !","🔺 Un triangle a toujours 180 degrés — c'est une loi mathématique !","🔺 Les ailes d'avion sont triangulaires pour mieux fendre l'air !"],
+  'Jaune':["🟡 Le jaune est la couleur la plus visible de loin !","🟡 Le soleil paraît jaune mais sa lumière est en réalité blanche !","🟡 Le jaune est utilisé pour les panneaux d'avertissement !","🟡 Les abeilles voient le jaune différemment de nous !","🟡 Les gilets jaunes des ouvriers les rendent visibles de loin !"],
+};
+
+function getNextFact(profileId,answerKey){
+  const arr=FACTS[answerKey];
+  if(!arr||!arr.length)return null;
+  const sk=`fact_${profileId}_${answerKey}`;
+  let shown=[];
+  try{shown=JSON.parse(localStorage.getItem(sk)||'[]');}catch{}
+  const avail=arr.map((_,i)=>i).filter(i=>!shown.includes(i));
+  const pool=avail.length?avail:arr.map((_,i)=>i);
+  if(!avail.length){shown=[];}
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  shown.push(idx);
+  try{localStorage.setItem(sk,JSON.stringify(shown));}catch{}
+  return{text:arr[idx],index:shown.length,total:arr.length};
+}
 
 /* ── MINI GAMES DATA ── */
 const GAMES_DATA={
@@ -372,6 +422,54 @@ const GAMES_DATA={
        ]},
     ]
   },
+  transports:{
+    title:'Transports',emoji:'🚗',color:'#FF6B9D',bg:'#FCE4EC',
+    games:[
+      {id:'transport_name',title:'Quel transport ?',emoji:'🚗',
+       questions:[
+        {display:'✈️',prompt:'Comment s'appelle ce transport ?',choices:['Bateau','Avion','Train','Voiture'],answer:'Avion'},
+        {display:'🚂',prompt:'Comment s'appelle ce transport ?',choices:['Bus','Métro','Train','Tramway'],answer:'Train'},
+        {display:'⛵',prompt:'Comment s'appelle ce transport ?',choices:['Bateau','Avion','Sous-marin','Ferry'],answer:'Bateau'},
+        {display:'🚁',prompt:'Comment s'appelle ce transport ?',choices:['Avion','Fusée','Hélicoptère','Drone'],answer:'Hélicoptère'},
+        {display:'🚲',prompt:'Comment s'appelle ce transport ?',choices:['Moto','Trottinette','Vélo','Scooter'],answer:'Vélo'},
+        {display:'🚀',prompt:'Comment s'appelle ce transport ?',choices:['Avion','Fusée','Hélicoptère','Navette'],answer:'Fusée'},
+       ]},
+      {id:'where_travel',title:'Où voyage-t-il ?',emoji:'🌍',
+       questions:[
+        {display:'✈️',prompt:'L'avion voyage dans... ?',choices:['La mer','Le ciel','La forêt','Le désert'],answer:'Le ciel'},
+        {display:'🚢',prompt:'Le bateau voyage sur... ?',choices:['La route','Le ciel','La mer','Les rails'],answer:'La mer'},
+        {display:'🚂',prompt:'Le train roule sur... ?',choices:['La route','Le ciel','La mer','Les rails'],answer:'Les rails'},
+        {display:'🚗',prompt:'La voiture roule sur... ?',choices:['La route','Le ciel','La mer','Les rails'],answer:'La route'},
+        {display:'🚀',prompt:'La fusée voyage dans... ?',choices:['La mer','Le ciel','L'espace','La forêt'],answer:'L'espace'},
+        {display:'🚲',prompt:'Le vélo roule sur... ?',choices:['La route','Le ciel','La mer','Les rails'],answer:'La route'},
+       ]},
+      {id:'how_many_wheels',title:'Combien de roues ?',emoji:'🔢',
+       questions:[
+        {display:'🛴',prompt:'Combien de roues a une trottinette ?',choices:['1','2','3','4'],answer:'2'},
+        {display:'🚗',prompt:'Combien de roues a une voiture ?',choices:['2','3','4','6'],answer:'4'},
+        {display:'🚲',prompt:'Combien de roues a un vélo ?',choices:['1','2','3','4'],answer:'2'},
+        {display:'🏍️',prompt:'Combien de roues a une moto ?',choices:['1','2','3','4'],answer:'2'},
+        {display:'🚌',prompt:'Combien de roues a un bus ?',choices:['2','4','6','8'],answer:'6'},
+        {display:'🛺',prompt:'Combien de roues a un tricycle ?',choices:['1','2','3','4'],answer:'3'},
+       ]},
+      {id:'transport_sound',title:'Quel son ?',emoji:'🔊',
+       questions:[
+        {display:'🚂',prompt:'Quel son fait le train ?',choices:['Vroom','Tchou tchou','Pouet pouet','Zoom'],answer:'Tchou tchou'},
+        {display:'🚗',prompt:'Quel son fait la voiture ?',choices:['Tchou tchou','Vroom','Splash','Zoom'],answer:'Vroom'},
+        {display:'🚢',prompt:'Quel son fait le bateau ?',choices:['Vroom','Tchou tchou','Pouet pouet','Zoom'],answer:'Pouet pouet'},
+        {display:'✈️',prompt:'Quel son fait l'avion ?',choices:['Vroom','Tchou tchou','Pouet pouet','Zoom'],answer:'Zoom'},
+        {display:'🚑',prompt:'Quel son fait l'ambulance ?',choices:['Vroom','Tchou tchou','Pilou pilou','Zoom'],answer:'Pilou pilou'},
+       ]},
+      {id:'who_drives',title:'Qui conduit ?',emoji:'👨‍✈️',
+       questions:[
+        {display:'✈️',prompt:'Qui pilote l'avion ?',choices:['Conducteur','Pilote','Capitaine','Chauffeur'],answer:'Pilote'},
+        {display:'🚂',prompt:'Qui conduit le train ?',choices:['Pilote','Capitaine','Conducteur','Chauffeur'],answer:'Conducteur'},
+        {display:'🚢',prompt:'Qui commande le bateau ?',choices:['Pilote','Capitaine','Conducteur','Chauffeur'],answer:'Capitaine'},
+        {display:'🚌',prompt:'Qui conduit le bus ?',choices:['Pilote','Capitaine','Conducteur','Chauffeur'],answer:'Chauffeur'},
+        {display:'🚀',prompt:'Qui pilote la fusée ?',choices:['Chauffeur','Capitaine','Astronaute','Conducteur'],answer:'Astronaute'},
+       ]},
+    ]
+  },
   sciences:{
     title:'Sciences',emoji:'🔬',color:'#FF6B9D',bg:'#FCE4EC',
     games:[
@@ -427,6 +525,17 @@ function isWeekend(){const d=new Date().getDay();return d===0||d===6;}
 function getDayName(){return ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][new Date().getDay()];}
 function getActiveTab(){const h=new Date().getHours();if(h>=6&&h<12)return 'matin';if(h>=12&&h<19)return 'retour';return 'dodo';}
 function getHero(id){return HEROES.find(h=>h.id===id)||HEROES[0];}
+function getAvatar(profile){
+  if(profile&&profile.photoUrl)return{type:'photo',value:profile.photoUrl};
+  const h=getHero(profile?.heroId);return{type:'emoji',value:h.emoji};
+}
+function AvatarDisplay({profile,size=54,cls=''}){
+  const av=getAvatar(profile);
+  if(av.type==='photo')return(
+    <img src={av.value} alt="profil" style={{width:size,height:size,borderRadius:'50%',objectFit:'cover',border:'3px solid white',boxShadow:'0 4px 12px rgba(0,0,0,.15)',display:'inline-block'}}/>
+  );
+  return <span className={cls} style={{fontSize:size*.82,lineHeight:1,display:'inline-block'}}>{av.value}</span>;
+}
 function doneKey(pid,tab,tid){return `${pid}_${todayKey()}_${tab}_${tid}`;}
 function getTaskList(tab,cts){
   const key=tab==='matin'?(isWeekend()?'matin_weekend':'matin_semaine'):tab;
@@ -482,33 +591,64 @@ function StarBar({pts,total}){
 // HERO SELECT
 function HeroSelectScreen({profile,onSave}){
   const [sel,setSel]=useState(profile.heroId);
+  const [photoUrl,setPhotoUrl]=useState(profile.photoUrl||null);
+  const fileRef=useRef();
+  function handlePhoto(e){
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{setPhotoUrl(ev.target.result);setSel('__photo__');};
+    reader.readAsDataURL(file);
+  }
+  function handleSave(){
+    if(sel==='__photo__'&&photoUrl)onSave('__photo__',photoUrl);
+    else onSave(sel,null);
+  }
   return(
     <div style={{minHeight:'100vh',background:'var(--bg)',padding:'52px 20px 40px'}}>
-      <div style={{textAlign:'center',marginBottom:28}}>
+      <div style={{textAlign:'center',marginBottom:24}}>
         <Logo/>
-        <div style={{marginTop:20,display:'inline-block',background:'var(--teal)',color:'white',borderRadius:'var(--r-full)',padding:'6px 18px',fontSize:12,fontWeight:800}}>ÉTAPE 1</div>
-        <h1 className="title-font" style={{fontSize:28,marginTop:12,color:'var(--text)'}}>{profile.name}, choisis ton héros !</h1>
-        <p style={{color:'var(--text2)',fontSize:14,marginTop:6}}>Lequel te ressemble aujourd'hui ?</p>
+        <div style={{marginTop:16,display:'inline-block',background:'var(--teal)',color:'white',borderRadius:'var(--r-full)',padding:'6px 18px',fontSize:12,fontWeight:800}}>ÉTAPE 1</div>
+        <h1 className="title-font" style={{fontSize:26,marginTop:10,color:'var(--text)'}}>{profile.name}, choisis ton héros !</h1>
+        <p style={{color:'var(--text2)',fontSize:13,marginTop:4}}>Une photo ou un personnage ?</p>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:32}}>
+      {/* Photo option */}
+      <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:'none'}}/>
+      <div onClick={()=>fileRef.current.click()} className="tcard card" style={{
+        padding:'16px',marginBottom:14,display:'flex',alignItems:'center',gap:16,
+        border:sel==='__photo__'?'3px solid var(--blue)':'3px solid transparent',
+        background:sel==='__photo__'?'#EBF4FF':'var(--card)',
+        boxShadow:sel==='__photo__'?'0 8px 28px rgba(77,150,255,.25)':'0 4px 16px rgba(0,0,0,.07)',
+      }}>
+        {photoUrl&&sel==='__photo__'
+          ?<img src={photoUrl} alt="photo" style={{width:68,height:68,borderRadius:'50%',objectFit:'cover',border:'3px solid var(--blue)',flexShrink:0}}/>
+          :<div style={{width:68,height:68,borderRadius:'50%',background:'#EBF4FF',display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,border:'3px dashed var(--blue)',flexShrink:0}}>📷</div>
+        }
+        <div>
+          <div className="title-font" style={{fontSize:17,color:'var(--blue)'}}>Ma Photo</div>
+          <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>Caméra ou galerie 📸</div>
+          {sel==='__photo__'&&<div style={{fontSize:11,color:'var(--blue)',marginTop:3,fontWeight:800}}>✓ Photo sélectionnée</div>}
+        </div>
+      </div>
+      <p style={{textAlign:'center',color:'var(--text2)',fontSize:12,marginBottom:12}}>— ou choisis un personnage —</p>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:28}}>
         {HEROES.map(h=>{
           const active=sel===h.id;
           return(
-            <div key={h.id} onClick={()=>{setSel(h.id);speak(h.name);}} className="tcard card" style={{
-              padding:'22px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:10,
+            <div key={h.id} onClick={()=>{setSel(h.id);setPhotoUrl(null);speak(h.name);}} className="tcard card" style={{
+              padding:'18px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:8,
               border:active?`3px solid ${h.color}`:'3px solid transparent',
               background:active?h.bg:'var(--card)',
               boxShadow:active?`0 8px 28px ${h.color}44`:'0 4px 16px rgba(0,0,0,.07)',
-              transform:active?'scale(1.05)':'scale(1)',position:'relative',
+              transform:active?'scale(1.04)':'scale(1)',position:'relative',
             }}>
-              {active&&<div style={{position:'absolute',top:-10,right:-10,width:26,height:26,background:'var(--green)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:14,fontWeight:800,boxShadow:'0 4px 10px rgba(107,203,119,.4)'}}>✓</div>}
-              <span className={active?'bounce':'wobble'} style={{fontSize:56}}>{h.emoji}</span>
-              <span className="title-font" style={{fontSize:15,color:active?h.color:'var(--text2)',textAlign:'center'}}>{h.name}</span>
+              {active&&<div style={{position:'absolute',top:-10,right:-10,width:26,height:26,background:'var(--green)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:14,fontWeight:800}}>✓</div>}
+              <span className={active?'bounce':'wobble'} style={{fontSize:50}}>{h.emoji}</span>
+              <span className="title-font" style={{fontSize:13,color:active?h.color:'var(--text2)',textAlign:'center'}}>{h.name}</span>
             </div>
           );
         })}
       </div>
-      <button className="btn btn-orange" style={{width:'100%',padding:'18px',fontSize:20}} onClick={()=>onSave(sel)}>
+      <button className="btn btn-orange" style={{width:'100%',padding:'18px',fontSize:20}} onClick={handleSave}>
         C'est parti ! ✨
       </button>
     </div>
@@ -557,7 +697,7 @@ function HomeScreen({profiles,activeId,done,pts,customTasks,onSwitch,onTab,onBoc
                 boxShadow:active?`0 6px 20px ${h.color}33`:'0 4px 12px rgba(0,0,0,.07)',
                 position:'relative',
               }}>
-                <span style={{fontSize:44}}>{h.emoji}</span>
+                <AvatarDisplay profile={p} size={54}/>
                 <span className="title-font" style={{color:h.color,fontSize:16}}>{p.name}</span>
                 <span style={{fontSize:12,color:'#FFA000',fontWeight:700}}>⭐ {pts[`${p.id}_${month}`]||0}</span>
                 {active&&<button onClick={e=>{e.stopPropagation();onHeroChange(p.id);}} style={{
@@ -650,7 +790,7 @@ function RoutineScreen({profile,tab,done,customTasks,onToggle,onBack}){
             <h1 className="title-font" style={{fontSize:22}}>{meta.label}</h1>
             <p style={{color:'var(--text2)',fontSize:13}}>{meta.sub}</p>
           </div>
-          <span className="bounce" style={{fontSize:40}}>{hero.emoji}</span>
+          <AvatarDisplay profile={profile} size={48} cls="bounce"/>
         </div>
         <div style={{display:'flex',gap:5,marginBottom:6}}>
           {tasks.map((_,i)=>(
@@ -722,7 +862,10 @@ function BocalScreen({profile,pts,onBack}){
     <div style={{minHeight:'100vh',background:'var(--bg)',padding:'52px 20px 110px'}} className="noscroll">
       <button onClick={onBack} style={{background:'var(--card)',border:'none',borderRadius:'50%',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:20,boxShadow:'0 4px 12px rgba(0,0,0,.1)',marginBottom:24}}>←</button>
       <div style={{textAlign:'center',marginBottom:20}}>
-        <h1 className="title-font" style={{fontSize:28}}>Tes Étoiles Magiques ⭐</h1>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:12}}>
+        <AvatarDisplay profile={profile} size={72}/>
+      </div>
+      <h1 className="title-font" style={{fontSize:28}}>Tes Étoiles Magiques ⭐</h1>
         <p style={{color:'var(--text2)',marginTop:6}}>Regarde ton bocal se remplir !</p>
       </div>
       <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
@@ -754,12 +897,17 @@ function BocalScreen({profile,pts,onBack}){
 }
 
 // LEARNING HUB
-function LearningHub({onBack,onGame}){
+function LearningHub({profile,gameScores,onBack,onGame}){
   return(
     <div style={{minHeight:'100vh',background:'var(--bg)',padding:'52px 20px 110px'}} className="noscroll">
       <button onClick={onBack} style={{background:'var(--card)',border:'none',borderRadius:'50%',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:20,boxShadow:'0 4px 12px rgba(0,0,0,.1)',marginBottom:20}}>←</button>
-      <h1 className="title-font" style={{fontSize:26,marginBottom:6}}>Apprendre en jouant 🎮</h1>
-      <p style={{color:'var(--text2)',marginBottom:24,fontSize:14}}>Choisis une catégorie pour commencer !</p>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+        <span style={{fontSize:40}}>{profile?getHero(profile.heroId).emoji:'🎮'}</span>
+        <div>
+          <h1 className="title-font" style={{fontSize:26}}>Apprendre en jouant 🎮</h1>
+          <p style={{color:'var(--text2)',fontSize:13}}>Scores de {profile?.name} — change de profil sur l'accueil</p>
+        </div>
+      </div>
       {Object.entries(GAMES_DATA).map(([catKey,cat])=>(
         <div key={catKey} style={{marginBottom:24}}>
           <h2 className="title-font" style={{fontSize:18,marginBottom:12,color:cat.color}}>
@@ -769,8 +917,13 @@ function LearningHub({onBack,onGame}){
             {cat.games.map(game=>(
               <div key={game.id} onClick={()=>onGame(catKey,game.id)} className="tcard card" style={{
                 padding:'16px',display:'flex',flexDirection:'column',alignItems:'center',gap:8,
-                background:cat.bg,border:`2px solid ${cat.color}22`,
+                background:cat.bg,border:`2px solid ${cat.color}22`,position:'relative',
               }}>
+                {(()=>{const sc=gameScores&&profile?gameScores[`${profile.id}_${catKey}_${game.id}`]:null;return sc&&(
+                  <div style={{position:'absolute',top:-8,right:-8,background:sc.best===sc.total?'var(--green)':'var(--orange)',color:'white',borderRadius:'var(--r-full)',padding:'3px 8px',fontSize:10,fontWeight:800,boxShadow:'0 2px 8px rgba(0,0,0,.15)'}}>
+                    ⭐{sc.best}/{sc.total}
+                  </div>
+                );})()}
                 <span className="wobble" style={{fontSize:40}}>{game.emoji}</span>
                 <span className="title-font" style={{fontSize:13,textAlign:'center',color:cat.color}}>{game.title}</span>
                 <span style={{fontSize:10,color:'var(--text2)'}}>{game.questions.length} questions</span>
@@ -784,7 +937,7 @@ function LearningHub({onBack,onGame}){
 }
 
 // GAME SCREEN
-function GameScreen({catKey,gameId,profile,onBack,onComplete}){
+function GameScreen({catKey,gameId,profile,gameScores,onBack,onComplete}){
   const cat=GAMES_DATA[catKey];
   const game=cat.games.find(g=>g.id===gameId);
   const [qIdx,setQIdx]=useState(0);
@@ -793,6 +946,8 @@ function GameScreen({catKey,gameId,profile,onBack,onComplete}){
   const [answered,setAnswered]=useState(false);
   const [finished,setFinished]=useState(false);
   const [streak,setStreak]=useState(0);
+  const [fact,setFact]=useState(null);
+  const [showFact,setShowFact]=useState(false);
 
   const q=game.questions[qIdx];
 
@@ -800,17 +955,45 @@ function GameScreen({catKey,gameId,profile,onBack,onComplete}){
     if(answered)return;
     setSelected(choice);setAnswered(true);
     const correct=choice===q.answer;
-    if(correct){
-      setScore(s=>s+1);setStreak(s=>s+1);
-      speak('Bravo !');
-    } else {
-      setStreak(0);speak('Presque ! C\'est '+ q.answer);
-    }
+    if(correct){setScore(s=>s+1);setStreak(s=>s+1);speak('Bravo !');}
+    else{setStreak(0);speak('Presque ! C\'est '+q.answer);}
+    const f=getNextFact(profile?.id||'guest',q.answer);
     setTimeout(()=>{
-      if(qIdx<game.questions.length-1){setQIdx(i=>i+1);setSelected(null);setAnswered(false);}
+      if(f){setFact(f);setShowFact(true);}
+      else if(qIdx<game.questions.length-1){setQIdx(i=>i+1);setSelected(null);setAnswered(false);}
       else setFinished(true);
-    },1400);
+    },1000);
   }
+  function handleFactClose(){
+    setShowFact(false);setFact(null);
+    if(qIdx<game.questions.length-1){setQIdx(i=>i+1);setSelected(null);setAnswered(false);}
+    else setFinished(true);
+  }
+
+  if(showFact&&fact) return(
+    <div style={{minHeight:'100vh',background:cat.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:28}}>
+      <div className="spring-in card" style={{padding:'32px 24px',maxWidth:360,width:'100%',textAlign:'center'}}>
+        <div style={{fontSize:56,marginBottom:14}}>💡</div>
+        <div style={{
+          background:'linear-gradient(135deg,var(--yellow),var(--orange))',
+          color:'white',borderRadius:'var(--r-full)',padding:'6px 18px',
+          fontSize:12,fontWeight:800,display:'inline-block',marginBottom:18,
+          fontFamily:"'Fredoka One',cursive",letterSpacing:.5,
+        }}>LE SAVAIS-TU ? {fact.index}/{fact.total}</div>
+        <p style={{fontSize:19,fontWeight:700,lineHeight:1.6,color:'var(--text)',marginBottom:28}}>
+          {fact.text}
+        </p>
+        <div style={{display:'flex',gap:6,justifyContent:'center',marginBottom:24}}>
+          {Array.from({length:fact.total}).map((_,i)=>(
+            <div key={i} style={{width:10,height:10,borderRadius:'50%',background:i<fact.index?cat.color:'#E0E0E0'}}/>
+          ))}
+        </div>
+        <button className="btn btn-orange" style={{width:'100%',padding:'16px',fontSize:18}} onClick={handleFactClose}>
+          Continuer ! ➡️
+        </button>
+      </div>
+    </div>
+  );
 
   if(finished) return(
     <div style={{minHeight:'100vh',background:cat.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:20}}>
@@ -827,7 +1010,7 @@ function GameScreen({catKey,gameId,profile,onBack,onComplete}){
           <button className="btn btn-orange" style={{padding:'14px',fontSize:17}} onClick={()=>{setQIdx(0);setScore(0);setSelected(null);setAnswered(false);setFinished(false);setStreak(0);}}>
             Rejouer 🔄
           </button>
-          <button className="btn btn-outline" style={{padding:'14px',fontSize:17}} onClick={onBack}>
+          <button className="btn btn-outline" style={{padding:'14px',fontSize:17}} onClick={()=>{onComplete(score,game.questions.length);onBack();}}>
             Retour aux jeux
           </button>
         </div>
@@ -902,7 +1085,7 @@ function CelebrationOverlay({profile,onClose}){
       <Confetti/>
       <div style={{fontSize:100}} className="bounce">🎉</div>
       <div className="spring-in card" style={{padding:'36px 48px',textAlign:'center',maxWidth:340,boxShadow:'0 32px 80px rgba(0,0,0,.4)'}}>
-        <div style={{fontSize:72}}>{hero.emoji}</div>
+        <AvatarDisplay profile={profile} size={72}/>
         <h2 className="title-font" style={{fontSize:32,color:'var(--orange)',marginTop:10}}>Bravo {profile.name} !</h2>
         <div style={{background:'#E8F5E9',borderRadius:'var(--r-full)',padding:'10px 28px',marginTop:14,display:'inline-block'}}>
           <span className="title-font" style={{fontSize:22,color:'var(--green)'}}>+10 points ⭐</span>
@@ -1133,7 +1316,7 @@ function ParentDashboard({profiles,pts,done,awarded,customTasks,scheduleHours,on
               return(
                 <div key={p.id} className="card" style={{padding:'20px',marginBottom:16}}>
                   <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
-                    <span style={{fontSize:46}}>{hero.emoji}</span>
+                    <AvatarDisplay profile={p} size={48}/>
                     <div style={{flex:1}}>
                       <h3 className="title-font" style={{fontSize:20}}>{p.name}</h3>
                       <p style={{color:'var(--text2)',fontSize:13}}>⭐ {monthPts} pts ce mois</p>
@@ -1210,7 +1393,7 @@ function ParentDashboard({profiles,pts,done,awarded,customTasks,scheduleHours,on
               return(
                 <div key={p.id} className="card" style={{padding:'20px',marginBottom:14}}>
                   <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
-                    <span style={{fontSize:46}}>{hero.emoji}</span>
+                    <AvatarDisplay profile={p} size={48}/>
                     <div>
                       <h3 className="title-font" style={{fontSize:18}}>{p.name}</h3>
                       <p style={{color:'var(--text2)',fontSize:13}}>⭐ {pts[`${p.id}_${month}`]||0} pts ce mois</p>
@@ -1246,6 +1429,7 @@ function App(){
   const [celebrate,setCelebrate]=useState(false);
   const [heroFor,setHeroFor]=useState(null);
   const [customTasks,setCustomTasks]=useState({});
+  const [gameScores,setGameScores]=useState({});
   const [scheduleHours,setScheduleHours]=useState({matin:[6,12],retour:[12,19],dodo:[19,23]});
   const [loaded,setLoaded]=useState(false);
 
@@ -1257,6 +1441,7 @@ function App(){
     const pr=load('rk_prof_v3');if(pr)setProfiles(pr);
     const ct=load('rk_ctasks_v3');if(ct)setCustomTasks(ct);
     const sh=load('rk_sched_v3');if(sh)setScheduleHours(sh);
+    const gs=load('rk_gscores_v3');if(gs)setGameScores(gs);
     fbLoad('app','state').then(s=>{
       if(s){
         if(s.done)setDone(s.done);
@@ -1301,10 +1486,25 @@ function App(){
     save(newDone,pts,awarded);
   }
 
-  function handleHeroSave(heroId){
-    const np=profiles.map(p=>p.id===heroFor?{...p,heroId}:p);
-    setProfiles(np);try{localStorage.setItem('rk_prof_v3',JSON.stringify(np));}catch{}
-    fbSave('app','state',{done,pts,awarded,profiles:np,customTasks,scheduleHours});
+  function handleGameComplete(catKey,gameId,score,total){
+    const key=`${activeId}_${catKey}_${gameId}`;
+    const prev=gameScores[key]||{best:0,plays:0,total};
+    const ng={...gameScores,[key]:{best:Math.max(prev.best,score),plays:prev.plays+1,total,lastScore:score}};
+    setGameScores(ng);
+    try{localStorage.setItem('rk_gscores_v3',JSON.stringify(ng));}catch{}
+    fbSave('app','state',{done,pts,awarded,profiles,customTasks,scheduleHours,gameScores:ng});
+  }
+
+  function handleHeroSave(heroId,photoUrl){
+    const np=profiles.map(p=>{
+      if(p.id!==heroFor)return p;
+      if(heroId==='__photo__')return{...p,photoUrl};
+      return{...p,heroId,photoUrl:null};
+    });
+    setProfiles(np);
+    try{localStorage.setItem('rk_prof_v3',JSON.stringify(np));}catch{}
+    const npClean=np.map(({photoUrl:_,...rest})=>rest);
+    fbSave('app','state',{done,pts,awarded,profiles:npClean,customTasks,scheduleHours});
     setHeroFor(null);setScreen('home');speak('Super !');
   }
 
@@ -1341,9 +1541,9 @@ function App(){
 
       {screen==='bocal'&&<BocalScreen profile={profile} pts={pts} onBack={()=>setScreen('home')}/>}
 
-      {screen==='learn'&&!gameCtx&&<LearningHub onBack={()=>setScreen('home')} onGame={(cat,game)=>setGameCtx({cat,game})}/>}
+      {screen==='learn'&&!gameCtx&&<LearningHub profile={profile} gameScores={gameScores} onBack={()=>setScreen('home')} onGame={(cat,game)=>setGameCtx({cat,game})}/>}
 
-      {screen==='learn'&&gameCtx&&<GameScreen catKey={gameCtx.cat} gameId={gameCtx.game} profile={profile} onBack={()=>setGameCtx(null)} onComplete={()=>setGameCtx(null)}/>}
+      {screen==='learn'&&gameCtx&&<GameScreen catKey={gameCtx.cat} gameId={gameCtx.game} profile={profile} gameScores={gameScores} onBack={()=>setGameCtx(null)} onComplete={(score,total)=>{handleGameComplete(gameCtx.cat,gameCtx.game,score,total);setGameCtx(null);}}/>}
 
       {screen==='parent'&&<ParentDashboard profiles={profiles} pts={pts} done={done} awarded={awarded} customTasks={customTasks} scheduleHours={scheduleHours} onResetPts={handleResetPts} onSaveCustomTasks={handleSaveCustomTasks} onSaveSchedule={handleSaveSchedule} onBack={()=>setScreen('home')}/>}
 
