@@ -56,16 +56,80 @@ const VOICE_ID="kwhMCf63M8O3rCfnQ3oQ";
 const aBuf={};let actx=null;
 function getCtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx;}
 function stripEmoji(t){return t.replace(/[^\x00-\x7F\xA0-\xFF\u0100-\u024F\u1E00-\u1EFF ]/g,"").trim();}
-async function speak(t){
+
+// ── iOS Audio System ──────────────────────────────────────────────
+let _actx=null;let _unlocked=false;const _cache={};
+
+function _getCtx(){
+  if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)();
+  return _actx;
+}
+
+// Unlock iOS audio with silent buffer - MUST be called in user gesture
+function unlockIOS(){
+  if(_unlocked)return;
   try{
-    getCtx();let buf=aBuf[t];
+    const ctx=_getCtx();
+    if(ctx.state==="suspended")ctx.resume();
+    // Play 1-frame silent buffer - this truly unlocks iOS
+    const buf=ctx.createBuffer(1,1,22050);
+    const src=ctx.createBufferSource();
+    src.buffer=buf;src.connect(ctx.destination);src.start(0);
+    _unlocked=true;
+  }catch(e){}
+}
+
+// Pre-fetch audio in background (no user gesture needed for fetch)
+async function prefetch(text){
+  if(_cache[text])return;
+  try{
+    const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+VOICE_ID,{
+      method:"POST",
+      headers:{"xi-api-key":ELEVEN_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({text,model_id:"eleven_turbo_v2_5",voice_settings:{stability:.25,similarity_boost:.6,style:.5,use_speaker_boost:true}})
+    });
+    if(!r.ok)return;
+    _cache[text]=await r.arrayBuffer();
+  }catch(e){}
+}
+
+async function speak(t){
+  // Step 1: Unlock iOS synchronously (we're in a gesture handler)
+  unlockIOS();
+  try{
+    const ctx=_getCtx();
+    if(ctx.state==="suspended")await ctx.resume();
+    // Step 2: Get buffer (from cache or fetch)
+    let buf=_cache[t];
     if(!buf){
-      const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+VOICE_ID,{method:"POST",headers:{"xi-api-key":ELEVEN_KEY,"Content-Type":"application/json"},body:JSON.stringify({text:t,model_id:"eleven_turbo_v2_5",voice_settings:{stability:.25,similarity_boost:.6,style:.5,use_speaker_boost:true}})});
-      if(!r.ok)throw new Error();buf=await r.arrayBuffer();aBuf[t]=buf;
+      const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+VOICE_ID,{
+        method:"POST",
+        headers:{"xi-api-key":ELEVEN_KEY,"Content-Type":"application/json"},
+        body:JSON.stringify({text:t,model_id:"eleven_turbo_v2_5",voice_settings:{stability:.25,similarity_boost:.6,style:.5,use_speaker_boost:true}})
+      });
+      if(!r.ok)throw new Error("EL error");
+      buf=await r.arrayBuffer();
+      _cache[t]=buf;
     }
-    const ctx=getCtx(),dec=await ctx.decodeAudioData(buf.slice(0)),src=ctx.createBufferSource();
-    src.buffer=dec;src.connect(ctx.destination);src.start(0);
-  }catch{const u=new SpeechSynthesisUtterance(t);u.lang="fr-FR";u.rate=.85;u.pitch=1.1;window.speechSynthesis.speak(u);}
+    // Step 3: Decode and play
+    const decoded=await ctx.decodeAudioData(buf.slice(0));
+    const src=ctx.createBufferSource();
+    src.buffer=decoded;
+    src.connect(ctx.destination);
+    src.start(0);
+  }catch(e){
+    // Fallback: browser TTS
+    try{
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(t);
+      u.lang="fr-FR";u.rate=.85;u.pitch=1.1;
+      // Find French voice if available
+      const voices=window.speechSynthesis.getVoices();
+      const fr=voices.find(v=>v.lang.startsWith("fr"));
+      if(fr)u.voice=fr;
+      window.speechSynthesis.speak(u);
+    }catch(e2){}
+  }
 }
 
 const HEROES=[
@@ -1263,6 +1327,10 @@ function App(){
     </div>
   );
 }
+
+// Backup: unlock on any first touch
+document.addEventListener("touchstart",function(){unlockIOS();},{once:true,passive:true});
+document.addEventListener("touchend",function(){unlockIOS();},{once:true,passive:true});
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
