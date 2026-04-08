@@ -158,6 +158,48 @@ const PROFILES_DEF=[{id:'noe',name:'Noé',heroId:'bear'},{id:'ilyan',name:'Ilyan
 const TARGET=200;
 const EMOJIS=['🚽','🫧','🪥','👕','🛏️','🧤','🥾','💦','🧸','🍝','🩳','📚','🥣','🍽️','🤫','🎒','🌟','🎨','🎵','🏃','🍎','📖','🧩','🎮','🌈','🏠','⭐','🎯','🚀','🌺'];
 
+
+/* ── CHOICE ICONS MAPPING ── */
+const CHOICE_ICONS={
+  // Habitats
+  'Forêt':'🌲','Désert':'🏜️','Mer':'🌊','Montagne':'⛰️','Arctique':'🧊','Savane':'🌾','Jungle':'🌿','Océan':'🐋','Lac':'💧',
+  // Saisons
+  'Printemps':'🌸','Été':'☀️','Automne':'🍂','Hiver':'❄️',
+  // Chiffres
+  '0':'0️⃣','1':'1️⃣','2':'2️⃣','3':'3️⃣','4':'4️⃣','5':'5️⃣','6':'6️⃣','7':'7️⃣','8':'8️⃣','9':'9️⃣','10':'🔟',
+  // Couleurs
+  'Rouge':'🔴','Bleu':'🔵','Vert':'🟢','Jaune':'🟡','Orange':'🟠','Violet':'🟣','Rose':'🌸','Gris':'🩶','Blanc':'⚪','Noir':'⚫','Marron':'🟤',
+  // Animaux
+  'Lion':'🦁','Tigre':'🐯','Léopard':'🐆','Guépard':'🐆','Éléphant':'🐘','Girafe':'🦒','Renard':'🦊','Dauphin':'🐬','Baleine':'🐋','Requin':'🦈','Orque':'🐳','Pingouin':'🐧','Manchot':'🐧',
+  'Chiot':'🐶','Chaton':'🐱','Veau':'🐄','Agneau':'🐑','Poussin':'🐣','Faon':'🦌','Poulain':'🐴','Chevreau':'🐐','Lapereau':'🐇','Souriceau':'🐭',
+  // Sons
+  'Meuh':'🐮','Croâ':'🐸','Cocorico':'🐓','Bêê':'🐑','Coin':'🦆','Miaou':'🐱','Ouaf':'🐕',
+  // Oui/Non
+  'Oui':'✅','Non':'❌','Vivant':'🌱','Non-vivant':'🪨','Vivante':'🌱','Non-vivante':'🪨',
+  // Fruit/Légume
+  'Fruit':'🍎','Légume':'🥕',
+  // Flotte/Coule
+  'Flotte':'🪵','Coule':'⬇️',
+  // Chaud/Froid
+  'Chaud':'🔥','Froid':'🧊','Chaude':'🔥','Froide':'🧊',
+  // Formes
+  'Cercle':'⭕','Carré':'⬛','Triangle':'🔺','Rectangle':'▬',
+  // Sens
+  'Le nez':'👃','Les yeux':'👀','La bouche':'👅','Les oreilles':'👂','Les mains':'✋',
+  // Météo
+  'Ensoleillé':'☀️','Pluvieux':'🌧️','Nuageux':'☁️','Neigeux':'🌨️','Orageux':'⛈️',
+  // Fleurs/Arbres
+  'Tournesol':'🌻','Rose':'🌹','Tulipe':'🌷','Marguerite':'🌼','Sapin':'🌲','Chêne':'🌳','Érable':'🍁','Platane':'🌳',
+  // Tailles
+  "L'éléphant":'🐘','La souris':'🐭',"L'arbre":'🌳','La plante':'🌱','La Terre':'🌍','La pomme':'🍎','La fourmi':'🐜','Le lion':'🦁','La maison':'🏠',"L'immeuble":'🏢',
+  // Sciences
+  'La Terre tourne':'🌍','Après la pluie':'🌈','La pluie gelée':'🌨️','Eau + lumière':'💧',
+  // Mélange couleurs
+  'Gris':'🩶',
+  // Pattes
+  'La souris':'🐭',"L'arbre":'🌳',
+};
+
 /* ── MINI GAMES DATA ── */
 const GAMES_DATA={
   lettres:{
@@ -444,7 +486,7 @@ function HeroSelectScreen({profile,onSave}){
     <div style={{minHeight:'100vh',background:'var(--bg)',padding:'52px 20px 40px'}}>
       <div style={{textAlign:'center',marginBottom:28}}>
         <Logo/>
-        <div style={{marginTop:20,display:'inline-block',background:'var(--teal)',color:'white',borderRadius:var('--r-full'),padding:'6px 18px',fontSize:12,fontWeight:800}}>ÉTAPE 1</div>
+        <div style={{marginTop:20,display:'inline-block',background:'var(--teal)',color:'white',borderRadius:'var(--r-full)',padding:'6px 18px',fontSize:12,fontWeight:800}}>ÉTAPE 1</div>
         <h1 className="title-font" style={{fontSize:28,marginTop:12,color:'var(--text)'}}>{profile.name}, choisis ton héros !</h1>
         <p style={{color:'var(--text2)',fontSize:14,marginTop:6}}>Lequel te ressemble aujourd'hui ?</p>
       </div>
@@ -827,11 +869,14 @@ function GameScreen({catKey,gameId,profile,onBack,onComplete}){
           }
           return(
             <div key={choice} onClick={()=>handleAnswer(choice)} className="tcard" style={{
-              padding:'18px 12px',borderRadius:'var(--r-lg)',background:bg,border,
+              padding:'16px 10px',borderRadius:'var(--r-lg)',background:bg,border,
               textAlign:'center',boxShadow:'0 4px 14px rgba(0,0,0,.08)',
+              display:'flex',flexDirection:'column',alignItems:'center',gap:8,
             }}>
-              <span className="title-font" style={{fontSize:18,color}}>
-                {answered&&choice===q.answer?'✅ ':answered&&choice===selected&&choice!==q.answer?'❌ ':''}
+              <span style={{fontSize:44,lineHeight:1}}>
+                {answered&&choice===q.answer?'✅':answered&&choice===selected&&choice!==q.answer?'❌':(CHOICE_ICONS[choice]||'❓')}
+              </span>
+              <span className="title-font" style={{fontSize:14,color,lineHeight:1.2,textAlign:'center'}}>
                 {choice}
               </span>
             </div>
