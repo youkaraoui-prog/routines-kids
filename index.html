@@ -699,7 +699,7 @@ function GameScreen({catKey,gameId,profile,gameScores,onBack,onComplete}){
     else{setStreak(0);speak("Presque ! C est "+q.answer);}
     const f=getNextFact(profile?profile.id:"guest",q.answer);
     setTimeout(()=>{
-      if(f){setFact(f);setShowFact(true);}
+      if(f){setFact(f);setShowFact(true);speak(f.text);}
       else if(qIdx<game.questions.length-1){setQIdx(i=>i+1);setSelected(null);setAnswered(false);}
       else setFinished(true);
     },1000);
